@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-grid">
+    <!-- Row 1: Key Metrics -->
+    <div class="card score-card">
+        <h3>Dopamine Level</h3>
+        <div class="score-display">
+            <span class="score-value">{{ patterns.dopamine_score }}</span>
+            <span class="score-max">/ 100</span>
+        </div>
+        <p class="insight-text">
+            {% if patterns.dopamine_score > 70 %}
+            <span class="warning">High Dopamine!</span> You're spending too much time on instant-gratification apps.
+            {% else %}
+            <span class="success">Balanced.</span> Your digital consumption is healthy.
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="card status-card">
+        <h3>Peak Distraction Window</h3>
+        <div class="stat-highlight">{{ patterns.peak_window }}</div>
+        <p>This is when you're most likely to scroll mindlessly. Try a "Focus Lock" then.</p>
+    </div>
+
+    <div class="card streak-card">
+        <h3>Current Streak</h3>
+        <div class="stat-highlight">{{ user.current_streak }} Days</div>
+        <p>Consistent focus is the key to neuroplasticity.</p>
+    </div>
+
+    <!-- Row 1.5: Advanced Analytics -->
+    <div class="card status-card">
+        <h3>Most Addictive App</h3>
+        <div class="stat-highlight">{{ patterns.top_app }}</div>
+        <p>This application consumes the majority of your digital time.</p>
+    </div>
+
+    <div class="card score-card">
+        <h3>Productivity Ratio</h3>
+        <div class="score-display">
+            <span class="score-value">{{ patterns.productivity_ratio }}</span>
+            <span class="score-max">%</span>
+        </div>
+        <p class="insight-text">
+            {% if patterns.productivity_ratio > 50 %}
+            <span class="success">Productive.</span> More than half your time is well spent.
+            {% else %}
+            <span class="warning">Low Focus.</span> Distractions are outweighing deep work.
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="card streak-card">
+        <h3>Context Switch Penalty</h3>
+        <div class="stat-highlight">{{ patterns.context_switches }} Times</div>
+        <p>You mixed work and social apps within the same 3-hour window.</p>
+    </div>
+
+    <!-- Row 2: Charts -->
+    <div class="card chart-large">
+        <h3>Weekly Screen Usage (Minutes)</h3>
+        <canvas id="usageChart"></canvas>
+    </div>
+
+    <div class="card chart-medium">
+        <h3>Category Breakdown</h3>
+        <canvas id="categoryChart"></canvas>
+    </div>
+
+    <!-- Row 3: Smart Nudges -->
+    <div class="card nudge-card full-width">
+        <h3>🤖 Smart Nudges</h3>
+        <ul class="nudge-list">
+            <li><strong>Actionable Insight:</strong> Your usage peaks between <strong>{{ patterns.peak_window
+                    }}</strong>. Consider scheduling 15 minutes of meditation at {{ patterns.peak_window.split('-')[0]
+                }}:00.</li>
+            <li><strong>Gamification:</strong> Reach 2 hours of 'Productivity' today to earn +50 focus points!</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    // Weekly Usage Chart
+    const usageCtx = document.getElementById('usageChart').getContext('2d');
+    const usageData = {{ trends | tojson }};
+    new Chart(usageCtx, {
+        type: 'line',
+        data: {
+            labels: usageData.map(d => d.date),
+            datasets: [{
+                label: 'Usage (min)',
+                data: usageData.map(d => d.minutes),
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#94a3b8' } },
+                x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+            }
+        }
+    });
+
+    // Category Chart
+    const catCtx = document.getElementById('categoryChart').getContext('2d');
+    const catData = {{ patterns.category_data | tojson }};
+    new Chart(catCtx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(catData),
+            datasets: [{
+                data: Object.values(catData),
+                backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { color: '#94a3b8', font: { family: 'Outfit' } } }
+            }
+        }
+    });
+</script>
+{% endblock %}
