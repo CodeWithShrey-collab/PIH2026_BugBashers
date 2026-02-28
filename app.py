@@ -53,6 +53,62 @@ def api_login():
         return jsonify({"access_token": token})
     return jsonify({"error": "Invalid credentials"}), 401
 
+WEBSITE_CATEGORIES = {
+    # Social Media
+    'facebook.com': 'Social Media', 'instagram.com': 'Social Media', 'twitter.com': 'Social Media', 
+    'x.com': 'Social Media', 'linkedin.com': 'Social Media', 'tiktok.com': 'Social Media', 
+    'snapchat.com': 'Social Media', 'reddit.com': 'Social Media', 'pinterest.com': 'Social Media', 
+    'tumblr.com': 'Social Media', 'whatsapp.com': 'Social Media', 't.me': 'Social Media', 
+    'telegram.org': 'Social Media', 'discord.com': 'Social Media', 'twitch.tv': 'Social Media',
+    'quora.com': 'Social Media', 'wechat.com': 'Social Media', 'bereal.com': 'Social Media',
+    
+    # Entertainment (Video/Audio/Streaming/Gaming)
+    'youtube.com': 'Entertainment', 'netflix.com': 'Entertainment', 'hulu.com': 'Entertainment', 
+    'disneyplus.com': 'Entertainment', 'primevideo.com': 'Entertainment', 'spotify.com': 'Entertainment', 
+    'applemusic.com': 'Entertainment', 'soundcloud.com': 'Entertainment', 'pandora.com': 'Entertainment',
+    'hbo.com': 'Entertainment', 'max.com': 'Entertainment', 'paramountplus.com': 'Entertainment',
+    'peacocktv.com': 'Entertainment', 'vimeo.com': 'Entertainment', 'dailymotion.com': 'Entertainment',
+    'roblox.com': 'Entertainment', 'steampowered.com': 'Entertainment', 'epicgames.com': 'Entertainment',
+    'ign.com': 'Entertainment', 'gamespot.com': 'Entertainment', 'crunchyroll.com': 'Entertainment',
+    'imdb.com': 'Entertainment', 'rottentomatoes.com': 'Entertainment', '9gag.com': 'Entertainment',
+    'buzzfeed.com': 'Entertainment',
+    
+    # Productivity / Work / Education
+    'github.com': 'Productivity', 'gitlab.com': 'Productivity', 'bitbucket.org': 'Productivity',
+    'stackoverflow.com': 'Productivity', 'notion.so': 'Productivity', 'slack.com': 'Productivity', 
+    'trello.com': 'Productivity', 'asana.com': 'Productivity', 'jira.com': 'Productivity', 
+    'atlassian.net': 'Productivity', 'figma.com': 'Productivity', 'canva.com': 'Productivity',
+    'docs.google.com': 'Productivity', 'drive.google.com': 'Productivity', 'mail.google.com': 'Productivity',
+    'calendar.google.com': 'Productivity', 'workspace.google.com': 'Productivity', 
+    'office.com': 'Productivity', 'outlook.live.com': 'Productivity', 'microsoft365.com': 'Productivity',
+    'zoom.us': 'Productivity', 'meet.google.com': 'Productivity', 'teams.microsoft.com': 'Productivity',
+    'dropbox.com': 'Productivity', 'box.com': 'Productivity', 'chatgpt.com': 'Productivity',
+    'openai.com': 'Productivity', 'claude.ai': 'Productivity', 'anthropic.com': 'Productivity',
+    'perplexity.ai': 'Productivity', 'coursera.org': 'Productivity', 'udemy.com': 'Productivity',
+    'edx.org': 'Productivity', 'khanacademy.org': 'Productivity', 'duolingo.com': 'Productivity',
+    'codeacademy.com': 'Productivity', 'leetcode.com': 'Productivity', 'hackerrank.com': 'Productivity',
+    'medium.com': 'Productivity', 'wikipedia.org': 'Productivity',
+    
+    # E-Commerce / Shopping
+    'amazon.com': 'Shopping', 'ebay.com': 'Shopping', 'walmart.com': 'Shopping', 
+    'target.com': 'Shopping', 'etsy.com': 'Shopping', 'aliexpress.com': 'Shopping',
+    'alibaba.com': 'Shopping', 'shopify.com': 'Shopping', 'bestbuy.com': 'Shopping',
+    'homedepot.com': 'Shopping', 'ikea.com': 'Shopping', 'shein.com': 'Shopping',
+    'nike.com': 'Shopping', 'zara.com': 'Shopping', 'hm.com': 'Shopping',
+    'flipkart.com': 'Shopping', 'myntra.com': 'Shopping',
+    
+    # News / Information
+    'cnn.com': 'News', 'bbc.com': 'News', 'bbc.co.uk': 'News', 'nytimes.com': 'News', 
+    'washingtonpost.com': 'News', 'theguardian.com': 'News', 'foxnews.com': 'News', 
+    'wsj.com': 'News', 'bloomberg.com': 'News', 'reuters.com': 'News', 'forbes.com': 'News',
+    'cnbc.com': 'News', 'nbcnews.com': 'News', 'npr.org': 'News', 'usatoday.com': 'News',
+    'yahoo.com': 'News', 'msn.com': 'News', 'weather.com': 'News',
+
+    # Browser / Search / Utils (defaults)
+    'google.com': 'Browser', 'bing.com': 'Browser', 'duckduckgo.com': 'Browser',
+    'yahoo.com': 'Browser', 'baidu.com': 'Browser', 'yandex.com': 'Browser'
+}
+
 @app.route('/api/activity', methods=['POST'])
 @require_api_token
 def api_activity(user):
@@ -69,16 +125,24 @@ def api_activity(user):
     except (TypeError, ValueError):
         duration_mins = 1
         
-    current_hour = datetime.utcnow().hour
+    from datetime import timedelta
+    ist_now = datetime.utcnow() + timedelta(hours=5, minutes=30)
+    current_hour = ist_now.hour
     interval_id = current_hour // 3
+    
+    # Determine the category based on the domain mapping
+    category = 'Browser'  # Default fallback
+    if website_name:
+        domain = website_name.lower().replace('www.', '')
+        category = WEBSITE_CATEGORIES.get(domain, 'Browser')
     
     usage = AppUsage(
         user_id=user.id,
         app_name=website_name,
-        category='Browser',
+        category=category,
         duration_minutes=duration_mins,
         interval_id=interval_id,
-        timestamp=datetime.utcnow()
+        timestamp=ist_now
     )
     db.session.add(usage)
     db.session.commit()
@@ -163,6 +227,7 @@ if __name__ == '__main__':
         # Create a default user if none exists
         if not User.query.first():
             default_user = User(username="default_user")
+            default_user.set_password("password") # Provide a default password
             db.session.add(default_user)
             db.session.commit()
             print("Default user created.")
