@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dopamine Reset | Smart Detox</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="dark-theme">
+    <nav class="navbar">
+        <a href="/" class="logo">Dopamine<span>Reset</span></a>
+        <div class="user-profile">
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('dashboard') }}" style="color: var(--text-primary); text-decoration: none;">
+                <span>Welcome, {{ current_user.username }}</span>
+            </a>
+            <a href="{{ url_for('behavioral_intelligence') }}"
+                style="margin-left: 1rem; color: var(--primary); text-decoration: none; font-weight: 600;">
+                🧠 Intelligence Lab
+            </a>
+            <a href="{{ url_for('analytics_master') }}"
+                style="margin-left: 1rem; color: #f59e0b; text-decoration: none; font-weight: 600;">
+                ✨ Master Analytics
+            </a>
+            <div class="points-badge" style="margin-left: 1rem;">{{ current_user.total_points }} pts</div>
+            <a href="{{ url_for('logout') }}" class="auth-text-link"
+                style="margin-left: 1rem; color: var(--text-secondary); text-decoration: none; font-size: 0.875rem;">Logout</a>
+            {% else %}
+            <a href="{{ url_for('login') }}" class="auth-text-link"
+                style="color: var(--text-primary); text-decoration: none; font-weight: 600; margin-right: 1rem;">Log
+                In</a>
+            <a href="{{ url_for('register') }}" class="auth-btn-small"
+                style="background: var(--primary); color: white; padding: 0.5rem 1rem; border-radius: 999px; text-decoration: none; font-weight: 600; font-size: 0.875rem;">Sign
+                Up</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Dopamine Reset Platform. Breathe, Focus, Live.</p>
+    </footer>
+</body>
+
+</html>

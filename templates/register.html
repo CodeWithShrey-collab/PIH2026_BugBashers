@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="card auth-card">
+        <h2>Create Account</h2>
+        <p>Start your dopamine detox journey today.</p>
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul class="flashes">
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('register') }}">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+
+            <button type="submit" class="auth-btn">Register</button>
+        </form>
+
+        <p class="auth-link">Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
+    </div>
+</div>
+
+<style>
+    /* Reusing auth styles from login page based on root CSS */
+    .auth-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 70vh;
+    }
+
+    .auth-card {
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+        padding: 3rem 2rem;
+    }
+
+    .auth-card h2 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        color: var(--primary);
+    }
+
+    .auth-card p {
+        color: var(--text-secondary);
+        margin-bottom: 2rem;
+    }
+
+    .flashes {
+        list-style: none;
+        padding: 0;
+        margin-bottom: 1.5rem;
+    }
+
+    .flashes li {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--accent-red);
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .form-group {
+        text-align: left;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.2);
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: var(--primary);
+    }
+
+    .auth-btn {
+        width: 100%;
+        padding: 1rem;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        margin-bottom: 1.5rem;
+    }
+
+    .auth-btn:hover {
+        background: #4f46e5;
+    }
+
+    .auth-link {
+        font-size: 0.875rem;
+    }
+
+    .auth-link a {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .auth-link a:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}

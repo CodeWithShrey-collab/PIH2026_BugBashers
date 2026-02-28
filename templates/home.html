@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-content">
+        <div class="badge">🚀 Introducing Dopamine Reset</div>
+        <h1 class="hero-title">Take Back Control of Your <span class="gradient-text">Focus.</span></h1>
+        <p class="hero-subtitle">
+            A smart digital detox platform that tracks your habits, identifies your peak distraction windows, and helps
+            you rebuild your attention span.
+        </p>
+        <div class="hero-actions">
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Go to Dashboard</a>
+            {% else %}
+            <a href="{{ url_for('register') }}" class="btn btn-primary">Start Your Detox</a>
+            <a href="{{ url_for('login') }}" class="btn btn-secondary">Log In</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="hero-visual">
+        <div class="glass-card mockup-card">
+            <div class="mockup-header">
+                <div class="dot red"></div>
+                <div class="dot yellow"></div>
+                <div class="dot green"></div>
+            </div>
+            <div class="mockup-body">
+                <h3>Dopamine Level</h3>
+                <h2 class="mockup-score">72<span class="muted">/100</span></h2>
+                <div class="progress-bar">
+                    <div class="progress-fill warning" style="width: 72%;"></div>
+                </div>
+                <p class="mockup-text"><span class="highlight-red">High Dopamine!</span> You're spending too much time
+                    on instant-gratification apps.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="features-section">
+    <div class="feature-card">
+        <div class="feature-icon">🧠</div>
+        <h3>Behavioral Analytics</h3>
+        <p>We analyze your 3-hourly usage to identify when and why you lose focus.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Dopamine Scoring</h3>
+        <p>Not all screen time is equal. We score your usage based on high-dopamine activities vs productivity.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <h3>Smart Nudges</h3>
+        <p>Receive actionable insights perfectly timed for your "Peak Distraction Windows."</p>
+    </div>
+</div>
+
+<style>
+    /* Hero Section */
+    .hero-section {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 75vh;
+        padding: 2rem 0;
+        gap: 4rem;
+    }
+
+    .hero-content {
+        flex: 1;
+        max-width: 600px;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: rgba(99, 102, 241, 0.1);
+        color: var(--primary);
+        border-radius: 999px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    .hero-title {
+        font-size: 4rem;
+        font-weight: 800;
+        line-height: 1.1;
+        margin-bottom: 1.5rem;
+        letter-spacing: -1px;
+    }
+
+    .gradient-text {
+        background: linear-gradient(to right, #6366f1, #a855f7);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+        font-size: 1.25rem;
+        color: var(--text-secondary);
+        margin-bottom: 2.5rem;
+        line-height: 1.6;
+    }
+
+    .hero-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .btn {
+        padding: 1rem 2rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        font-size: 1rem;
+        text-decoration: none;
+        transition: all 0.2s;
+        font-family: inherit;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+        box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.39);
+    }
+
+    .btn-primary:hover {
+        background: #4f46e5;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.23);
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+    }
+
+    /* Glass Mockup */
+    .hero-visual {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        position: relative;
+    }
+
+    /* Add a subtle glow behind the mockup */
+    .hero-visual::before {
+        content: '';
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        background: var(--primary);
+        filter: blur(100px);
+        opacity: 0.2;
+        border-radius: 50%;
+        z-index: 0;
+    }
+
+    .glass-card {
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 1.5rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        z-index: 1;
+    }
+
+    .mockup-card {
+        width: 100%;
+        max-width: 380px;
+        transform: rotate(2deg) translateY(-10px);
+        transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .mockup-card:hover {
+        transform: rotate(0deg) translateY(-20px);
+    }
+
+    .mockup-header {
+        padding: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .red {
+        background: #ef4444;
+    }
+
+    .yellow {
+        background: #f59e0b;
+    }
+
+    .green {
+        background: #10b981;
+    }
+
+    .mockup-body {
+        padding: 2rem;
+    }
+
+    .mockup-body h3 {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .mockup-score {
+        font-size: 3.5rem;
+        font-weight: 800;
+        color: var(--primary);
+        margin-bottom: 1rem;
+    }
+
+    .muted {
+        font-size: 1.5rem;
+        color: var(--text-secondary);
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        margin-bottom: 1rem;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        border-radius: 999px;
+    }
+
+    .warning {
+        background: var(--accent-red);
+    }
+
+    .mockup-text {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        line-height: 1.5;
+    }
+
+    .highlight-red {
+        color: var(--accent-red);
+        font-weight: 600;
+    }
+
+    /* Features Section */
+    .features-section {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+        padding: 4rem 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .feature-card {
+        padding: 2rem;
+        background: rgba(30, 41, 59, 0.4);
+        border-radius: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: transform 0.2s;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+        background: rgba(30, 41, 59, 0.8);
+        border-color: rgba(99, 102, 241, 0.3);
+    }
+
+    .feature-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .feature-card h3 {
+        font-size: 1.25rem;
+        margin-bottom: 0.75rem;
+        font-weight: 600;
+    }
+
+    .feature-card p {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .hero-section {
+            flex-direction: column;
+            text-align: center;
+            padding: 4rem 0;
+        }
+
+        .hero-actions {
+            justify-content: center;
+        }
+
+        .features-section {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
