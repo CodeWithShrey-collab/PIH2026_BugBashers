@@ -20,7 +20,15 @@
             <a href="{{ url_for('dashboard') }}" style="color: var(--text-primary); text-decoration: none;">
                 <span>Welcome, {{ current_user.username }}</span>
             </a>
-            <div class="points-badge">{{ current_user.total_points }} pts</div>
+            <a href="{{ url_for('behavioral_intelligence') }}"
+                style="margin-left: 1rem; color: var(--primary); text-decoration: none; font-weight: 600;">
+                🧠 Intelligence Lab
+            </a>
+            <a href="{{ url_for('analytics_master') }}"
+                style="margin-left: 1rem; color: #f59e0b; text-decoration: none; font-weight: 600;">
+                ✨ Master Analytics
+            </a>
+            <div class="points-badge" style="margin-left: 1rem;">{{ current_user.total_points }} pts</div>
             <a href="{{ url_for('logout') }}" class="auth-text-link"
                 style="margin-left: 1rem; color: var(--text-secondary); text-decoration: none; font-size: 0.875rem;">Logout</a>
             {% else %}

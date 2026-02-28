@@ -16,9 +16,8 @@ login_manager.init_app(app)
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
-
 from analytics import get_behavioral_patterns, get_daily_trends
-
+from intelligence import get_intelligence_data
 @app.route('/')
 def home():
     if current_user.is_authenticated:
@@ -69,6 +68,20 @@ def dashboard():
     patterns = get_behavioral_patterns(current_user.id)
     trends = get_daily_trends(current_user.id)
     return render_template('dashboard.html', patterns=patterns, trends=trends, user=current_user)
+
+@app.route('/behavioral-intelligence')
+@login_required
+def behavioral_intelligence():
+    intel_data = get_intelligence_data(current_user.id)
+    return render_template('behavioral_intelligence.html', intel=intel_data, user=current_user)
+
+@app.route('/analytics')
+@login_required
+def analytics_master():
+    patterns = get_behavioral_patterns(current_user.id)
+    trends = get_daily_trends(current_user.id)
+    intel_data = get_intelligence_data(current_user.id)
+    return render_template('analytics_master.html', patterns=patterns, trends=trends, intel=intel_data, user=current_user)
 
 @app.route('/api/stats')
 @login_required
