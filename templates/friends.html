@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-5">
+    <div class="col-md-12 text-center">
+        <h2 class="text-primary fw-bold text-uppercase mb-3" style="letter-spacing: 0.1em;">Neural Link Protocol</h2>
+        <p class="text-muted">Establish connections with other nodes in the network.</p>
+
+        <div class="card bg-black border-secondary d-inline-block p-4 mt-3" style="min-width: 300px;">
+            <small class="text-uppercase text-secondary mb-2 d-block">Your Node Identifier</small>
+            <h1 class="font-monospace text-info mb-0" style="letter-spacing: 0.3em;">{{ user.hex_code }}</h1>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center mb-5">
+    <div class="col-md-6">
+        <div class="card bg-dark border-primary shadow-sm">
+            <div class="card-header bg-primary text-white text-uppercase fw-bold">
+                <i class="bi bi-search me-2"></i>Initiate Connection
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('friends') }}">
+                    <div class="mb-3">
+                        <label for="hex_code" class="form-label text-info font-monospace">Target Node Hex Code</label>
+                        <input type="text" class="form-control bg-black text-white border-secondary font-monospace"
+                            id="hex_code" name="hex_code" placeholder="e.g. A1B2C3" maxlength="6" required
+                            style="font-size: 1.2rem; letter-spacing: 0.2em; text-transform: uppercase;">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">Establish Link</button>
+                </form>
+
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-info mt-3 mb-0 py-2 border-info bg-black text-info font-monospace" role="alert">
+                    > {{ message }}
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <h4 class="text-secondary text-uppercase mb-3 font-monospace border-bottom border-secondary pb-2">Active
+            Connections ({{ user.friends.count() }})</h4>
+
+        {% if user.friends.count() == 0 %}
+        <div class="text-center p-5 border border-secondary rounded bg-black">
+            <p class="text-muted font-monospace mb-0">> No established links found. Initiate a connection above.</p>
+        </div>
+        {% else %}
+        <div class="row g-3">
+            {% for friend in user.friends %}
+            <div class="col-md-4">
+                <div class="card bg-black border-success h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="mb-1">
+                                    <a href="{{ url_for('friend_profile', hex_code=friend.hex_code) }}"
+                                        class="text-white text-decoration-none border-bottom border-primary pb-1 custom-link">
+                                        {{ friend.username }} <i class="bi bi-box-arrow-up-right ms-1 text-primary"
+                                            style="font-size: 0.8rem;"></i>
+                                    </a>
+                                </h5>
+                                <span class="badge bg-success font-monospace text-uppercase mt-2"
+                                    style="letter-spacing: 0.1em;">Connected</span>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-secondary d-block">Points</small>
+                                <span class="text-info font-monospace fs-5">{{ friend.total_points }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .custom-link:hover {
+        color: var(--primary) !important;
+        border-color: var(--primary) !important;
+    }
+</style>
+{% endblock %}

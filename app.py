@@ -179,7 +179,7 @@ def register():
             flash('Username already exists')
             return redirect(url_for('register'))
             
-        new_user = User(username=username)
+        new_user = User(username=username) # hex_code generated automatically in __init__
         new_user.set_password(password)
         db.session.add(new_user)
         db.session.commit()
@@ -220,6 +220,137 @@ def analytics_master():
 def get_stats():
     patterns = get_behavioral_patterns(current_user.id)
     return jsonify(patterns)
+
+from analytics import generate_pseudo_ai_insights
+
+@app.route('/profile')
+@login_required
+def profile():
+    insights = generate_pseudo_ai_insights(current_user.id)
+    return render_template('profile.html', user=current_user, insights=insights)
+
+@app.route('/friends', methods=['GET', 'POST'])
+@login_required
+def friends():
+    if request.method == 'POST':
+        hex_code = request.form.get('hex_code', '').strip().upper()
+        if not hex_code:
+            flash("Please enter a hex code.")
+        elif hex_code == current_user.hex_code:
+            flash("You cannot add yourself as a friend.")
+        else:
+            friend = User.query.filter_by(hex_code=hex_code).first()
+            if not friend:
+                flash("No user found with that hex code.")
+            elif friend in current_user.friends:
+                flash("You are already friends with this user.")
+            else:
+                current_user.friends.append(friend)
+                friend.friends.append(current_user) # Mutual friendship for simplicity
+                db.session.commit()
+                flash(f"Successfully added {friend.username} as a friend!")
+        return redirect(url_for('friends'))
+    
+    return render_template('friends.html', user=current_user)
+
+from sqlalchemy import func
+from models import AppUsage
+
+@app.route('/friend/<hex_code>')
+@login_required
+def friend_profile(hex_code):
+    # Verify the hex code belongs to a valid friend
+    friend = User.query.filter_by(hex_code=hex_code).first()
+    if not friend or friend not in current_user.friends:
+        flash("You are not authorized to view this node's telemetry.")
+        return redirect(url_for('friends'))
+        
+    # Calculate minimal, privacy-safe stats
+    # 1. Top App
+    top_app_record = db.session.query(
+        AppUsage.app_name, func.sum(AppUsage.duration_minutes).label('total')
+    ).filter(AppUsage.user_id == friend.id).group_by(AppUsage.app_name).order_by(db.desc('total')).first()
+    
+    top_app = top_app_record[0] if top_app_record else "No Data"
+    
+    return render_template('friend_profile.html', user=current_user, friend=friend, top_app=top_app)
+
+import secrets
+from models import Guild
+
+@app.route('/guild', methods=['GET', 'POST'])
+@login_required
+def guild_dashboard():
+    if request.method == 'POST':
+        action = request.form.get('action')
+        
+        if action == 'create':
+            guild_name = request.form.get('guild_name', '').strip()
+            if guild_name:
+                access_code = secrets.token_hex(4).upper()
+                new_guild = Guild(name=guild_name, access_code=access_code, leader_id=current_user.id)
+                db.session.add(new_guild)
+                db.session.flush() # get ID
+                current_user.guild_id = new_guild.id
+                db.session.commit()
+                flash(f"Guild '{guild_name}' created successfully! Access code: {access_code}")
+                
+        elif action == 'join':
+            access_code = request.form.get('access_code', '').strip().upper()
+            guild_to_join = Guild.query.filter_by(access_code=access_code).first()
+            if guild_to_join:
+                current_user.guild_id = guild_to_join.id
+                db.session.commit()
+                flash(f"Successfully joined guild '{guild_to_join.name}'!")
+            else:
+                flash("Invalid access code.")
+                
+        elif action == 'leave':
+            if current_user.guild:
+                if current_user.guild.leader_id == current_user.id:
+                    flash("Guild leaders cannot leave their own guild yet.")
+                else:
+                    current_user.guild_id = None
+                    db.session.commit()
+                    flash("You left the guild.")
+                    
+        return redirect(url_for('guild_dashboard'))
+        
+    guild = current_user.guild
+    leaderboard = []
+    guild_stats = {
+        "total_points": 0,
+        "total_productivity_hours": 0,
+        "top_distraction": "N/A"
+    }
+    
+    if guild:
+        # Sort members by points descending
+        leaderboard = sorted(guild.members, key=lambda x: x.total_points, reverse=True)
+        
+        # Calculate Aggregated Stats
+        member_ids = [m.id for m in guild.members]
+        if member_ids:
+            # Total Productivity Time (in hours)
+            prod_mins = db.session.query(func.sum(AppUsage.duration_minutes)).filter(
+                AppUsage.user_id.in_(member_ids),
+                AppUsage.category == 'Productivity'
+            ).scalar() or 0
+            guild_stats["total_productivity_hours"] = round(prod_mins / 60, 1)
+            
+            # Top Distracting App (Social/Entertainment)
+            top_dist_record = db.session.query(
+                AppUsage.app_name, func.sum(AppUsage.duration_minutes).label('total')
+            ).filter(
+                AppUsage.user_id.in_(member_ids),
+                AppUsage.category.in_(['Social Media', 'Entertainment'])
+            ).group_by(AppUsage.app_name).order_by(db.desc('total')).first()
+            
+            guild_stats["top_distraction"] = top_dist_record[0] if top_dist_record else "None"
+            
+            guild_stats["total_points"] = sum(m.total_points for m in guild.members)
+        
+    return render_template('guild.html', user=current_user, guild=guild, leaderboard=leaderboard, guild_stats=guild_stats)
 
 if __name__ == '__main__':
     with app.app_context():

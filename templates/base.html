@@ -28,6 +28,18 @@
                 style="margin-left: 1rem; color: #f59e0b; text-decoration: none; font-weight: 600;">
                 ✨ Master Analytics
             </a>
+            <a href="{{ url_for('profile') }}"
+                style="margin-left: 1rem; color: #10b981; text-decoration: none; font-weight: 600;">
+                🤖 AI Profile
+            </a>
+            <a href="{{ url_for('friends') }}"
+                style="margin-left: 1rem; color: #3b82f6; text-decoration: none; font-weight: 600;">
+                👥 Network
+            </a>
+            <a href="{{ url_for('guild_dashboard') }}"
+                style="margin-left: 1rem; color: #ef4444; text-decoration: none; font-weight: 600;">
+                ⚔️ Syndicate
+            </a>
             <div class="points-badge" style="margin-left: 1rem;">{{ current_user.total_points }} pts</div>
             <a href="{{ url_for('logout') }}" class="auth-text-link"
                 style="margin-left: 1rem; color: var(--text-secondary); text-decoration: none; font-size: 0.875rem;">Logout</a>

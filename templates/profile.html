@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2 class="text-primary mb-3">Neural Profile Dashboard</h2>
+        <div class="card bg-dark text-white border-primary mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="card-title text-info">{{ user.username }}</h3>
+                        <p class="mb-1 text-muted">Astra Telemetry Active</p>
+                    </div>
+                    <div class="text-end text-center p-3 border border-secondary rounded bg-black">
+                        <small class="text-uppercase text-secondary d-block mb-1">Unique Identifier</small>
+                        <h2 class="font-monospace text-primary mb-0 shadow-sm" style="letter-spacing: 0.2rem;">{{
+                            user.hex_code }}</h2>
+                        <small class="text-muted mt-2 d-block">Share this code to interface with other nodes.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card bg-black border-danger">
+            <div class="card-header border-danger d-flex align-items-center">
+                <span class="spinner-grow spinner-grow-sm text-danger me-2" role="status" aria-hidden="true"></span>
+                <span class="font-monospace text-danger text-uppercase fw-bold">Live AI Behavioral Analysis</span>
+            </div>
+            <div class="card-body p-4" style="background-color: #050505; min-height: 300px;">
+                <div id="aiConsole" class="font-monospace text-success" style="font-size: 0.95rem; line-height: 1.6;">
+                    > Initializing Deep Behavioral Scan...<br>
+                    > Parsing telemetry from node {{ user.hex_code }}...<br>
+                    > Compiling Neural Efficiency Metrics...<br><br>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const insights = JSON.parse('{{ insights | tojson | safe }}');
+        const consoleEl = document.getElementById('aiConsole');
+
+        let insightIndex = 0;
+
+        function typeWriter(text, element, speed, callback) {
+            let i = 0;
+            const textNode = document.createTextNode('');
+            const span = document.createElement('span');
+            span.appendChild(textNode);
+            element.appendChild(span);
+            element.appendChild(document.createElement('br'));
+
+            function type() {
+                if (i < text.length) {
+                    textNode.nodeValue += text.charAt(i);
+                    i++;
+                    setTimeout(type, speed);
+                } else if (callback) {
+                    setTimeout(callback, 500);
+                }
+            }
+            type();
+        }
+
+        function displayNextInsight() {
+            if (insightIndex < insights.length) {
+                const prefix = insightIndex === insights.length - 1 ? "> [ASSESSMENT] " : "> [ANALYSIS] ";
+                // Add class based on content for colors
+                let spanClass = "text-success";
+                if (insights[insightIndex].includes("Warning") || insights[insightIndex].includes("critical")) spanClass = "text-warning";
+                if (insights[insightIndex].includes("CRITICAL")) spanClass = "text-danger";
+
+                const wrapper = document.createElement('span');
+                wrapper.className = spanClass;
+                consoleEl.appendChild(wrapper);
+
+                typeWriter(prefix + insights[insightIndex], wrapper, 20, () => {
+                    insightIndex++;
+                    displayNextInsight();
+                });
+            } else {
+                const end = document.createElement('div');
+                end.className = "text-muted mt-3 mb-0 blink_me";
+                end.innerHTML = "> Scanning Complete. Awaiting further telemetry...";
+                consoleEl.appendChild(end);
+            }
+        }
+
+        setTimeout(displayNextInsight, 1500);
+    });
+</script>
+
+<style>
+    .blink_me {
+        animation: blinker 1.5s linear infinite;
+    }
+
+    @keyframes blinker {
+        50% {
+            opacity: 0;
+        }
+    }
+</style>
+{% endblock %}

@@ -236,3 +236,50 @@ def get_daily_trends(user_id, days=7):
         trends.append({"date": d.strftime("%Y-%m-%d"), "minutes": usage})
     
     return trends[::-1] # Return in chronological order
+
+def generate_pseudo_ai_insights(user_id):
+    """
+    Generates jargon-heavy, complex-sounding insights based on the user's hardcoded stats.
+    Makes it seem like a sophisticated AI is analyzing their soul.
+    """
+    patterns = get_behavioral_patterns(user_id)
+    
+    if patterns["total_time"] == 0:
+        return [
+            "Initializing Neural Behavioral Scan... [FAILED]",
+            "Insufficient temporal data to establish limbic baseline.",
+            "Recommendation: Calibrate system with minimum 24h usage telemetry."
+        ]
+
+    insights = []
+    
+    # Productivity vs Distraction Matrix
+    if patterns["productivity_ratio"] > 50:
+        insights.append(f"Cognitive Efficiency Quotient is operating at {patterns['productivity_ratio']}%. Frontal lobe engagement indicates sustained hyper-focus vectors.")
+    else:
+        distraction_ratio = 100 - patterns["productivity_ratio"]
+        insights.append(f"Warning: Amygdala hijack detected. Cognitive bandwidth is {distraction_ratio}% fragmented by instant-gratification loops.")
+        
+    # App Dominance and Fragmentation
+    if patterns["app_dominance"] > 40:
+        insights.append(f"Hyper-fixation Anomaly located: '{patterns['top_app']}' monopolizes {patterns['app_dominance']}% of total attentional resources. Neural pathways risk over-calcification.")
+    
+    if patterns["fragmentation"] > 70:
+        insights.append(f"Attention Slicing Index critical ({patterns['fragmentation']}%). The subject is exhibiting chronic task-switching, degrading the deep-work myelination process.")
+    
+    # Peak Window Analysis
+    peak = patterns["peak_window"]
+    if peak != "N/A":
+        insights.append(f"Circadian Rhythm Alignment: Maximum cortical output isolated between {peak} hours. Suggesting biological priming for high-stakes algorithmic tasks during this delta.")
+
+    # Late Night / Relapse
+    if patterns["late_night_minutes"] > 120:
+        insights.append(f"Nocturnal Prefrontal Bypass: {patterns['late_night_minutes']} minutes of unauthorized screen exposure post-23:00. Melatonin synthesis is severely compromised.")
+        
+    if patterns["relapse_risk"] == "HIGH":
+        insights.append("CRITICAL: Predictive Behavioral Modeling anticipates an imminent Dopaminergic Relapse Event (Probability: 87.4%). Immediate environmental intervention required.")
+        
+    insights.append("Final Assessment: System recommends rapid recalibration of dopamine-seeking heuristic algorithms.")
+    
+    return insights
+
