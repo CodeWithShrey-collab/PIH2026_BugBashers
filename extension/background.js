@@ -1,3 +1,6 @@
+// Load shared config helper (defines getApiBase)
+importScripts('config.js');
+
 let tabMap = {};
 
 function websiteFromUrl(url) {
@@ -11,28 +14,24 @@ function websiteFromUrl(url) {
     }
 }
 
-// User required URL for export
-const API_ENDPOINT = "<placeholder_url_for_now2>";
-// Fallback local API
-const FALLBACK_API = "http://127.0.0.1:5000/api/activity";
-
 async function sendLog(payloadObj) {
     const { accessToken, telemetryConsent } = await chrome.storage.local.get(["accessToken", "telemetryConsent"]);
-
     if (!telemetryConsent || !accessToken) return false;
 
-    const bodyString = JSON.stringify(payloadObj);
-
-    const targetUrl = API_ENDPOINT === "<placeholder_url_for_now2>" ? FALLBACK_API : API_ENDPOINT;
+    // Resolve the API base from .env (via /api/config, cached in chrome.storage)
+    const apiBase = await getApiBase();
+    const endpoint = `${apiBase}/api/activity`;
 
     try {
-        const res = await fetch(targetUrl, {
+        const res = await fetch(endpoint, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${accessToken}`
+                "Authorization": `Bearer ${accessToken}`,
+                "ngrok-skip-browser-warning": "true"
             },
-            body: bodyString
+
+            body: JSON.stringify(payloadObj)
         });
         return res.ok;
     } catch {
@@ -68,7 +67,6 @@ async function endTab(tabId) {
     };
 
     delete tabMap[tabId];
-
     await sendLog(payload);
 }
 

@@ -1,5 +1,5 @@
-const API_BASE = "http://127.0.0.1:5000";
-const REGISTER_URL = "<placeholder_url_for_now>";
+// popup.js — handles login / logout UI for the Dopamine Reset extension
+// API base URL is resolved from the server's .env via getApiBase() in config.js
 
 const statusEl = document.getElementById("status");
 const loginBox = document.getElementById("loginBox");
@@ -10,10 +10,10 @@ const consentCheck = document.getElementById("telemetryConsent");
 const usernameEl = document.getElementById("username");
 const passEl = document.getElementById("password");
 
-document.getElementById("registerLink").addEventListener("click", () => {
-    // If he doesnt have account, then redirect to <placeholder_url_for_now>
-    const targetUrl = REGISTER_URL === "<placeholder_url_for_now>" ? `${API_BASE}/register` : REGISTER_URL;
-    chrome.tabs.create({ url: targetUrl });
+// Register link — opens the /register page on the configured server
+document.getElementById("registerLink").addEventListener("click", async () => {
+    const apiBase = await getApiBase();
+    chrome.tabs.create({ url: `${apiBase}/register` });
 });
 
 async function render() {
@@ -49,13 +49,23 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
     }
 
     statusEl.textContent = "Logging in...";
+
     try {
-        const res = await fetch(`${API_BASE}/api/login`, {
+        // Always resolve the URL from the server's .env (clears stale cache too)
+        await chrome.storage.local.remove("apiBase"); // force fresh fetch on login
+        const apiBase = await getApiBase();
+
+        const res = await fetch(`${apiBase}/api/login`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "ngrok-skip-browser-warning": "true"
+            },
             body: JSON.stringify({ username, password })
         });
+
         const data = await res.json();
+
         if (!res.ok) {
             statusEl.textContent = data.error || "Login failed";
             return;

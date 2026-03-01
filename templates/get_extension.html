@@ -13,8 +13,24 @@
             </p>
         </div>
     </div>
+    <!-- Already-installed update notice -->
+    <div class="card"
+        style="margin-bottom:1.5rem;border-color:#ef4444;background:rgba(80,10,10,0.3);padding:1.25rem 1.75rem;display:flex;align-items:center;gap:1rem;">
+        <div style="font-size:2rem;flex-shrink:0;">⚠️</div>
+        <div>
+            <strong style="color:#f87171;font-family:'Cinzel',serif;font-size:0.95rem;">Already installed a previous
+                version?</strong>
+            <p
+                style="color:var(--parchment-muted);font-size:0.85rem;margin:0.25rem 0 0;font-style:italic;line-height:1.6;">
+                Re-download the bundle below, then go to <code
+                    style="background:rgba(0,0,0,0.4);padding:0.1rem 0.35rem;border-radius:2px;font-family:monospace;color:var(--torch-bright);">chrome://extensions</code>,
+                click the <strong style="color:var(--parchment);font-style:normal;">🔄 Reload</strong> icon on the
+                Dopamine Reset card, and log in again.
+            </p>
+        </div>
+    </div>
 
-    <!-- Hero alert banner -->
+
     <div class="card"
         style="margin-bottom:2.5rem;border-color:var(--torch-gold);background:linear-gradient(135deg,rgba(100,65,10,0.25),rgba(40,25,5,0.35));text-align:center;padding:2.5rem;">
         <div style="font-size:3.5rem;margin-bottom:1rem;">⚗</div>
@@ -27,8 +43,7 @@
             browser.
             Follow the rites below to arm yourself and begin your dopamine conquest.
         </p>
-        <a href="{{ url_for('static', filename='extension/dopamine-reset-extension.zip') }}"
-            class="btn btn-primary btn-lg" download id="ext-download-btn">
+        <a href="{{ url_for('download_extension') }}" class="btn btn-primary btn-lg" download id="ext-download-btn">
             ⬇ Download the Arcane Extension
         </a>
         <p style="color:var(--parchment-muted);font-size:0.78rem;margin-top:0.75rem;font-style:italic;">
