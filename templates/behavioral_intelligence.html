@@ -92,10 +92,37 @@
     }
 </style>
 
-<div class="intel-header">
-    <h1>Behavioral Intelligence Lab</h1>
-    <p style="color: #94a3b8;">Deep pattern recognition and cognitive profiling.</p>
+<div class="page-title" style="margin-bottom:2rem;">
+    <span class="page-icon">🧠</span>
+    <div>
+        <h1>Intelligence Laboratory</h1>
+        <p style="color:var(--parchment-muted);font-size:0.9rem;margin-top:0.2rem;font-style:italic;">Deep pattern
+            recognition and cognitive profiling</p>
+    </div>
 </div>
+
+{% if intel.archetype == "New User" %}
+<div style="max-width:700px;margin:2rem auto;text-align:center;">
+    <div class="card"
+        style="padding:3rem 2.5rem;border-color:var(--torch-gold);background:linear-gradient(135deg,rgba(100,65,10,0.25),rgba(40,25,5,0.35));">
+        <div style="font-size:4rem;margin-bottom:1.25rem;">🧿</div>
+        <h2
+            style="font-family:'Cinzel Decorative',serif;color:var(--torch-bright);font-size:1.4rem;margin-bottom:0.75rem;text-shadow:0 0 14px rgba(245,200,66,0.4);">
+            The Oracle Has No Visions Yet
+        </h2>
+        <p style="color:var(--parchment-dim);max-width:480px;margin:0 auto 0.5rem;font-style:italic;line-height:1.8;">
+            The Intelligence Laboratory requires at least seven cycles of browsing data before it can construct
+            your cognitive profile. The Arcane Extension must first be installed and bound to your identity.
+        </p>
+        <p style="color:var(--parchment-muted);font-size:0.85rem;margin-bottom:2rem;font-style:italic;">
+            ⌛ Already installed? Browse for a few minutes and return here.
+        </p>
+        <a href="{{ url_for('get_extension') }}" class="btn btn-primary btn-lg" id="intel-get-ext-btn">
+            🧩 Acquire the Extension
+        </a>
+    </div>
+</div>
+{% else %}
 
 <!-- AI Insight Generator -->
 <div class="ai-insight-box">
@@ -329,4 +356,5 @@
         }
     });
 </script>
+{% endif %}
 {% endblock %}

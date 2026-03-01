@@ -1,40 +1,50 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row mb-5">
-    <div class="col-md-12 text-center">
-        <h2 class="text-primary fw-bold text-uppercase mb-3" style="letter-spacing: 0.1em;">Neural Link Protocol</h2>
-        <p class="text-muted">Establish connections with other nodes in the network.</p>
+<div class="animate-in">
 
-        <div class="card bg-black border-secondary d-inline-block p-4 mt-3" style="min-width: 300px;">
-            <small class="text-uppercase text-secondary mb-2 d-block">Your Node Identifier</small>
-            <h1 class="font-monospace text-info mb-0" style="letter-spacing: 0.3em;">{{ user.hex_code }}</h1>
+    <!-- Page Header -->
+    <div style="text-align:center; margin-bottom:3rem;">
+        <div class="page-title" style="justify-content:center;">
+            <span class="page-icon">👥</span>
+            <div>
+                <h1>Neural Link Protocol</h1>
+                <p style="color:var(--text-secondary);font-size:0.9rem;margin-top:0.2rem;">Establish connections with
+                    other nodes in the network.</p>
+            </div>
+        </div>
+        <div class="hex-display" style="margin-top:1rem;">
+            <span class="hex-label"><i class="bi bi-node-plus"></i> Your Node Identifier</span>
+            <span class="hex-code">{{ user.hex_code }}</span>
         </div>
     </div>
-</div>
 
-<div class="row justify-content-center mb-5">
-    <div class="col-md-6">
-        <div class="card bg-dark border-primary shadow-sm">
-            <div class="card-header bg-primary text-white text-uppercase fw-bold">
-                <i class="bi bi-search me-2"></i>Initiate Connection
+    <!-- Connect Form -->
+    <div style="display:flex; justify-content:center; margin-bottom:3rem;">
+        <div class="card connect-form-card" style="width:100%;max-width:520px; padding:0; overflow:hidden;">
+            <div class="connect-form-header">
+                <i class="bi bi-search"></i> Initiate Connection
             </div>
-            <div class="card-body p-4">
+            <div style="padding:1.75rem;">
                 <form method="POST" action="{{ url_for('friends') }}">
-                    <div class="mb-3">
-                        <label for="hex_code" class="form-label text-info font-monospace">Target Node Hex Code</label>
-                        <input type="text" class="form-control bg-black text-white border-secondary font-monospace"
-                            id="hex_code" name="hex_code" placeholder="e.g. A1B2C3" maxlength="6" required
-                            style="font-size: 1.2rem; letter-spacing: 0.2em; text-transform: uppercase;">
+                    <div class="form-group">
+                        <label for="hex_code"><i class="bi bi-heptagon-half" style="margin-right:0.35rem;"></i>Target
+                            Node Hex Code</label>
+                        <input type="text" id="hex_code" name="hex_code" placeholder="e.g. A1B2C3" maxlength="6"
+                            required
+                            style="font-family:'JetBrains Mono',monospace; font-size:1.15rem; letter-spacing:0.25em; text-transform:uppercase;">
                     </div>
-                    <button type="submit" class="btn btn-primary w-100 fw-bold">Establish Link</button>
+                    <button type="submit" class="auth-btn" style="margin-bottom:0;">
+                        <i class="bi bi-lightning-charge-fill"></i> Establish Link
+                    </button>
                 </form>
 
                 {% with messages = get_flashed_messages() %}
                 {% if messages %}
                 {% for message in messages %}
-                <div class="alert alert-info mt-3 mb-0 py-2 border-info bg-black text-info font-monospace" role="alert">
-                    > {{ message }}
+                <div
+                    style="margin-top:1rem; padding:0.85rem 1rem; background:rgba(34,211,238,0.08); border:1px solid rgba(34,211,238,0.2); border-radius:var(--radius-md); font-family:'JetBrains Mono',monospace; font-size:0.82rem; color:var(--accent-cyan);">
+                    &gt; {{ message }}
                 </div>
                 {% endfor %}
                 {% endif %}
@@ -42,40 +52,45 @@
             </div>
         </div>
     </div>
-</div>
 
-<div class="row">
-    <div class="col-md-12">
-        <h4 class="text-secondary text-uppercase mb-3 font-monospace border-bottom border-secondary pb-2">Active
-            Connections ({{ user.friends.count() }})</h4>
+    <!-- Active Connections -->
+    <div>
+        <h3
+            style="font-size:0.85rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); font-family:'JetBrains Mono',monospace; border-bottom:1px solid var(--border-color); padding-bottom:0.875rem; margin-bottom:1.5rem;">
+            <i class="bi bi-diagram-3" style="margin-right:0.4rem;"></i>
+            Active Connections ({{ user.friends.count() }})
+        </h3>
 
         {% if user.friends.count() == 0 %}
-        <div class="text-center p-5 border border-secondary rounded bg-black">
-            <p class="text-muted font-monospace mb-0">> No established links found. Initiate a connection above.</p>
+        <div
+            style="text-align:center; padding:4rem 2rem; background:rgba(255,255,255,0.02); border:1px dashed var(--border-color); border-radius:var(--radius-xl);">
+            <i class="bi bi-wifi-off"
+                style="font-size:3rem; color:var(--text-muted); display:block; margin-bottom:1rem;"></i>
+            <p style="font-family:'JetBrains Mono',monospace; color:var(--text-muted); font-size:0.875rem;">
+                &gt; No established links found. Initiate a connection above.
+            </p>
         </div>
         {% else %}
-        <div class="row g-3">
+        <div class="friends-grid">
             {% for friend in user.friends %}
-            <div class="col-md-4">
-                <div class="card bg-black border-success h-100">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <h5 class="mb-1">
-                                    <a href="{{ url_for('friend_profile', hex_code=friend.hex_code) }}"
-                                        class="text-white text-decoration-none border-bottom border-primary pb-1 custom-link">
-                                        {{ friend.username }} <i class="bi bi-box-arrow-up-right ms-1 text-primary"
-                                            style="font-size: 0.8rem;"></i>
-                                    </a>
-                                </h5>
-                                <span class="badge bg-success font-monospace text-uppercase mt-2"
-                                    style="letter-spacing: 0.1em;">Connected</span>
-                            </div>
-                            <div class="text-end">
-                                <small class="text-secondary d-block">Points</small>
-                                <span class="text-info font-monospace fs-5">{{ friend.total_points }}</span>
-                            </div>
+            <div class="friend-card">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;">
+                    <div>
+                        <a href="{{ url_for('friend_profile', hex_code=friend.hex_code) }}" class="friend-card-name">
+                            <i class="bi bi-person-circle" style="margin-right:0.4rem; color:var(--primary-light);"></i>
+                            {{ friend.username }}
+                        </a>
+                        <div class="friend-connected-badge">
+                            <i class="bi bi-check-circle-fill"></i> Connected
                         </div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div
+                            style="font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:0.25rem;">
+                            Points</div>
+                        <div
+                            style="font-family:'JetBrains Mono',monospace; font-size:1.2rem; font-weight:700; color:var(--accent-cyan);">
+                            {{ friend.total_points }}</div>
                     </div>
                 </div>
             </div>
@@ -83,12 +98,6 @@
         </div>
         {% endif %}
     </div>
-</div>
 
-<style>
-    .custom-link:hover {
-        color: var(--primary) !important;
-        border-color: var(--primary) !important;
-    }
-</style>
+</div>
 {% endblock %}

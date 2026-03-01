@@ -640,6 +640,11 @@ def guild_dashboard():
         
     return render_template('guild.html', user=current_user, guild=guild, leaderboard=leaderboard, guild_stats=guild_stats)
 
+@app.route('/get-extension')
+@login_required
+def get_extension():
+    return render_template('get_extension.html')
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
@@ -666,4 +671,4 @@ if __name__ == '__main__':
             db.session.commit()
             print("Armory has been automatically seeded.")
     
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=8080)

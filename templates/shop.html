@@ -1,76 +1,85 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row mb-5">
-    <div class="col-md-8">
-        <h1 class="text-warning fw-bold text-uppercase mb-2"
-            style="letter-spacing: 0.1em; text-shadow: 0 0 10px rgba(255,193,7,0.5);">The Armory</h1>
-        <p class="text-secondary font-monospace">Exchange your hard-earned Coins for permanent defensive and offensive
-            capabilities.</p>
-    </div>
-    <div class="col-md-4 text-end">
-        <div class="d-inline-block bg-dark border border-warning rounded p-3 text-center">
-            <span class="d-block text-secondary small font-monospace text-uppercase">Treasury</span>
-            <div class="mt-2">
-                <span class="text-white fw-bold fs-3"><i class="bi bi-coin text-warning me-2"></i>{{ user.coins
-                    }}</span>
+<div class="animate-in">
+
+    <!-- Header -->
+    <div
+        style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.5rem; margin-bottom:2.5rem;">
+        <div>
+            <div class="page-title" style="margin-bottom:0.25rem; padding-bottom:0; border-bottom:none;">
+                <span class="page-icon">🛡️</span>
+                <h1>The Armory</h1>
             </div>
-            <small class="text-muted font-monospace mt-2 d-block">Cap: {{ user.daily_coins_earned }} / 100 Today</small>
+            <p
+                style="color:var(--text-secondary); font-family:'JetBrains Mono',monospace; font-size:0.82rem; margin-top:0.4rem; margin-left:3.25rem;">
+                Exchange hard-earned Coins for permanent combat capabilities.
+            </p>
+        </div>
+        <div class="treasury-box">
+            <div class="treasury-label"><i class="bi bi-coin" style="margin-right:0.35rem;"></i>Treasury</div>
+            <div class="treasury-amount">{{ user.coins }}</div>
+            <div class="treasury-cap">Daily Cap: {{ user.daily_coins_earned }} / 100</div>
         </div>
     </div>
-</div>
 
-<div class="row g-4">
+    <!-- Equipment Grid -->
     {% if equipment %}
-    {% for item in equipment %}
-    <div class="col-md-6 col-lg-3">
-        <div class="card bg-black border-secondary h-100 position-relative">
+    <div class="armory-grid stagger">
+        {% for item in equipment %}
+        <div class="item-card animate-in">
+
             {% if item in user.equipment %}
-            <div
-                class="position-absolute w-100 h-100 bg-black opacity-75 z-2 d-flex align-items-center justify-content-center">
-                <h3 class="text-success fw-bold font-monospace"
-                    style="transform: rotate(-15deg); border: 3px solid #198754; padding: 10px;">OWNED</h3>
+            <div class="item-owned-overlay">
+                <span class="item-owned-stamp">OWNED</span>
             </div>
             {% endif %}
 
-            <div class="card-body text-center z-1 pt-4">
-                {% if item.type == 'Weapon' %}
-                <i class="bi bi-heptagon-half text-danger mb-3 d-block" style="font-size: 3rem;"></i>
-                {% elif item.type == 'Armor' %}
-                <i class="bi bi-shield-shaded text-info mb-3 d-block" style="font-size: 3rem;"></i>
+            <!-- Icon by type -->
+            {% if item.type == 'Weapon' %}
+            <span class="item-icon" style="color:var(--accent-red);">⚔️</span>
+            {% elif item.type == 'Armor' %}
+            <span class="item-icon" style="color:var(--accent-cyan);">🛡️</span>
+            {% else %}
+            <span class="item-icon" style="color:var(--primary-light);">💎</span>
+            {% endif %}
+
+            <div class="item-name">{{ item.name }}</div>
+            <div class="item-type">{{ item.type }}</div>
+
+            <!-- Stat -->
+            <div
+                class="item-stat {% if item.effect_type == 'attack' %}atk{% elif item.effect_type == 'defense' %}def{% else %}spec{% endif %}">
+                {% if item.effect_type == 'attack' %}
+                <i class="bi bi-lightning-fill"></i> +{{ item.effect_value | int }} ATK
+                {% elif item.effect_type == 'defense' %}
+                <i class="bi bi-shield-fill"></i> +{{ item.effect_value | int }} DEF
                 {% else %}
-                <i class="bi bi-gem text-primary mb-3 d-block" style="font-size: 3rem;"></i>
+                <i class="bi bi-stars"></i> {{ item.effect_type | upper }}
                 {% endif %}
-
-                <h5 class="text-white font-monospace text-uppercase">{{ item.name }}</h5>
-                <p class="text-muted small mb-4">{{ item.type }}</p>
-
-                <div class="bg-dark p-2 rounded mb-4 border border-secondary">
-                    {% if item.effect_type == 'attack' %}
-                    <span class="d-block text-danger fw-bold">+{{ item.effect_value | int }} ATK</span>
-                    {% elif item.effect_type == 'defense' %}
-                    <span class="d-block text-info fw-bold">+{{ item.effect_value | int }} DEF</span>
-                    {% else %}
-                    <span class="d-block text-primary fw-bold">{{ item.effect_type | upper }}</span>
-                    {% endif %}
-                </div>
-
-                <form method="POST" action="{{ url_for('shop') }}">
-                    <input type="hidden" name="equipment_id" value="{{ item.id }}">
-                    <button type="submit" class="btn btn-outline-warning w-100 fw-bold font-monospace">
-                        Buy - {{ item.cost }} <i class="bi bi-coin"></i>
-                    </button>
-                </form>
             </div>
+
+            <form method="POST" action="{{ url_for('shop') }}">
+                <input type="hidden" name="equipment_id" value="{{ item.id }}">
+                <button type="submit" class="item-buy-btn">
+                    Buy &mdash; {{ item.cost }} <i class="bi bi-coin"></i>
+                </button>
+            </form>
         </div>
+        {% endfor %}
     </div>
-    {% endfor %}
+
     {% else %}
-    <div class="col-12 text-center text-muted py-5">
-        <h4 class="font-monospace">The armory is currently empty.</h4>
-        <p>Admin: Equipment needs to be seeded into the database.</p>
+    <div
+        style="text-align:center; padding:5rem 2rem; background:rgba(255,255,255,0.02); border:1px dashed var(--border-color); border-radius:var(--radius-xl);">
+        <i class="bi bi-archive"
+            style="font-size:3rem; color:var(--text-muted); display:block; margin-bottom:1rem;"></i>
+        <h4 style="font-family:'JetBrains Mono',monospace; color:var(--text-muted); margin-bottom:0.5rem;">The armory is
+            currently empty.</h4>
+        <p style="color:var(--text-muted); font-size:0.85rem;">Admin: Equipment needs to be seeded into the database.
+        </p>
     </div>
     {% endif %}
-</div>
 
+</div>
 {% endblock %}

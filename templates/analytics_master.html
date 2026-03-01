@@ -111,11 +111,39 @@
     }
 </style>
 
-<div class="master-header">
-    <h1>AI-Powered Cognitive & Dopamine Intelligence System</h1>
-    <p style="color: #94a3b8; font-size: 1.1rem;">A predictive attention analytics and neuro-inspired focus optimization
-        platform.</p>
+<div class="page-title" style="margin-bottom:2rem;">
+    <span class="page-icon">📜</span>
+    <div>
+        <h1>Rune Analytics Master</h1>
+        <p style="color:var(--parchment-muted);font-size:0.9rem;margin-top:0.2rem;font-style:italic;">
+            Predictive attention analytics and neuro-inspired focus intelligence
+        </p>
+    </div>
 </div>
+
+{% if patterns.total_time == 0 %}
+<div style="max-width:700px;margin:2rem auto;text-align:center;">
+    <div class="card"
+        style="padding:3rem 2.5rem;border-color:var(--torch-gold);background:linear-gradient(135deg,rgba(100,65,10,0.25),rgba(40,25,5,0.35));">
+        <div style="font-size:4rem;margin-bottom:1.25rem;">📜</div>
+        <h2
+            style="font-family:'Cinzel Decorative',serif;color:var(--torch-bright);font-size:1.4rem;margin-bottom:0.75rem;text-shadow:0 0 14px rgba(245,200,66,0.4);">
+            The Rune Scrolls Are Blank
+        </h2>
+        <p style="color:var(--parchment-dim);max-width:480px;margin:0 auto 0.5rem;font-style:italic;line-height:1.8;">
+            The Analytics Citadel has nothing to inscribe. No browser data has yet flowed through the dungeon.
+            Install the <strong style="color:var(--torch-bright);font-style:normal;">Arcane Extension</strong>
+            to begin filling these stone tablets.
+        </p>
+        <p style="color:var(--parchment-muted);font-size:0.85rem;margin-bottom:2rem;font-style:italic;">
+            ⌛ Already installed? Browse the web for a few minutes, then return.
+        </p>
+        <a href="{{ url_for('get_extension') }}" class="btn btn-primary btn-lg" id="analytics-get-ext-btn">
+            🧩 Acquire the Extension
+        </a>
+    </div>
+</div>
+{% else %}
 
 <!-- Sticky Nav -->
 <nav class="sticky-nav">
@@ -471,4 +499,5 @@
         }
     });
 </script>
+{% endif %}
 {% endblock %}

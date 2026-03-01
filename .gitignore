@@ -79,3 +79,4 @@ dopamine_detox.db
 *.swo
 
 quickcommit.bat
+.venv
