@@ -90,7 +90,8 @@
                 <div class="position-absolute w-100 h-100 bg-danger pulse-animation"
                     style="top:0; left:0; border-radius: 50%; opacity: 0.1; filter: blur(30px);"></div>
                 <img src="{{ url_for('static', filename=sprite_path) }}" alt="{{ boss.boss_type }} Target"
-                    class="img-fluid drop-shadow-heavy" style="max-height: 250px; z-index: 2; position: relative;">
+                    class="img-fluid drop-shadow-heavy"
+                    style="max-height: 270px; border-radius: 20px; z-index: 2; position: relative; border: 2px solid rgba(220,53,69,0.3);">
             </div>
         </div>
 
@@ -172,18 +173,38 @@
 
                             <form method="POST" action="{{ url_for('combat_resolve', boss_id=boss.id) }}">
                                 {% if user.current_health <= 0.0 %} <button type="button"
-                                    class="btn btn-dark border-secondary w-100 py-3 fw-bold font-monospace text-uppercase"
+                                    class="btn btn-dark border-secondary w-100 py-3 fw-bold font-monospace text-uppercase d-flex flex-column align-items-center justify-content-center"
                                     disabled style="opacity: 0.7;">
                                     <i class="bi bi-bandaid d-block mb-2 fs-3 text-warning"></i>
-                                    Recovering HP...<br>
-                                    <small class="text-warning mt-1 d-block">You must heal before attacking.</small>
+                                    <span>Recovering HP...</span>
+                                    <span class="text-warning mt-1 d-block small">ETA: <span
+                                            id="recovery-timer">Calculating...</span></span>
                                     </button>
+                                    <script>
+                                        let timeLeft = parseInt("{{ recovery_seconds_left | default(0) }}", 10);
+                                        const timerEl = document.getElementById('recovery-timer');
+
+                                        function updateTimer() {
+                                            if (timeLeft <= 0) {
+                                                timerEl.innerText = "Ready. Refreshing...";
+                                                location.reload();
+                                                return;
+                                            }
+                                            let mins = Math.floor(timeLeft / 60);
+                                            let secs = timeLeft % 60;
+                                            timerEl.innerText = mins + "m " + (secs < 10 ? "0" : "") + secs + "s";
+                                            timeLeft--;
+                                        }
+
+                                        updateTimer(); // Initial call
+                                        setInterval(updateTimer, 1000);
+                                    </script>
                                     {% else %}
                                     <button type="submit"
-                                        class="btn btn-outline-info w-100 py-3 fw-bold font-monospace btn-hover-glow text-uppercase">
+                                        class="btn btn-outline-info w-100 py-3 fw-bold font-monospace btn-hover-glow text-uppercase d-flex flex-column align-items-center justify-content-center">
                                         <i class="bi bi-sword d-block mb-2 fs-3 text-info"></i>
-                                        Engage Target<br>
-                                        <div class="mt-1 d-block small">
+                                        <span>Engage Target</span>
+                                        <span class="mt-1 d-block small">
                                             <span class="text-white">Your Power: <strong>{{ player_power | int
                                                     }}</strong></span> |
                                             {% if player_power >= enemy_power %}
@@ -191,7 +212,7 @@
                                             {% else %}
                                             <span class="text-danger">IMPOSSIBLE (Need {{ enemy_power | int }})</span>
                                             {% endif %}
-                                        </div>
+                                        </span>
                                     </button>
                                     {% if player_power < enemy_power %} <small
                                         class="text-danger d-block mt-2 font-monospace fw-bold">Warning: Defeat drains
@@ -203,12 +224,12 @@
                         <div class="col-md-6">
                             <form method="POST" action="{{ url_for('combat_relapse', boss_id=boss.id) }}">
                                 <button type="submit"
-                                    class="btn btn-outline-danger w-100 py-3 fw-bold font-monospace text-uppercase"
+                                    class="btn btn-outline-danger w-100 py-3 fw-bold font-monospace text-uppercase d-flex flex-column align-items-center justify-content-center"
                                     onmouseover="this.classList.add('bg-danger', 'text-white')"
                                     onmouseout="this.classList.remove('bg-danger', 'text-white')">
                                     <i class="bi bi-skull d-block mb-2 fs-3"></i>
-                                    Succumb (Relapse)<br>
-                                    <small class="text-white-50 mt-1 d-block">Retreat & Increase Corruption</small>
+                                    <span>Succumb (Relapse)</span>
+                                    <span class="text-white-50 mt-1 d-block small">Retreat & Increase Corruption</span>
                                 </button>
                             </form>
                         </div>

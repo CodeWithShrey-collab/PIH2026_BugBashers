@@ -35,14 +35,23 @@
 
         {% if current_user.is_authenticated %}
         <ul class="nav-links">
-            <li><a href="{{ url_for('dashboard') }}">⚔ Dashboard</a></li>
-            <li><a href="{{ url_for('behavioral_intelligence') }}">🧠 Intelligence</a></li>
-            <li><a href="{{ url_for('analytics_master') }}">📜 Analytics</a></li>
-            <li><a href="{{ url_for('profile') }}">🤖 AI Profile</a></li>
-            <li><a href="{{ url_for('friends') }}">👥 Network</a></li>
-            <li><a href="{{ url_for('guild_dashboard') }}">🎌 Syndicate</a></li>
-            <li><a href="{{ url_for('rpg_map') }}">🗺 The Wastes</a></li>
-            <li><a href="{{ url_for('shop') }}">🛡 Armory</a></li>
+            <li><a href="{{ url_for('dashboard') }}" class="{{ 'active' if request.endpoint == 'dashboard' else '' }}">⚔
+                    Dashboard</a></li>
+            <li><a href="{{ url_for('behavioral_intelligence') }}"
+                    class="{{ 'active' if request.endpoint == 'behavioral_intelligence' else '' }}">🧠 Intelligence</a>
+            </li>
+            <li><a href="{{ url_for('analytics_master') }}"
+                    class="{{ 'active' if request.endpoint == 'analytics_master' else '' }}">📜 Analytics</a></li>
+            <li><a href="{{ url_for('profile') }}" class="{{ 'active' if request.endpoint == 'profile' else '' }}">🤖 AI
+                    Profile</a></li>
+            <li><a href="{{ url_for('friends') }}" class="{{ 'active' if request.endpoint == 'friends' else '' }}">👥
+                    Network</a></li>
+            <li><a href="{{ url_for('guild_dashboard') }}"
+                    class="{{ 'active' if request.endpoint == 'guild_dashboard' else '' }}">🎌 Syndicate</a></li>
+            <li><a href="{{ url_for('rpg_map') }}" class="{{ 'active' if request.endpoint == 'rpg_map' else '' }}">🗺
+                    The Wastes</a></li>
+            <li><a href="{{ url_for('shop') }}" class="{{ 'active' if request.endpoint == 'shop' else '' }}">🛡
+                    Armory</a></li>
         </ul>
         <div class="nav-right">
             <div class="points-badge">🪙 {{ current_user.coins }}</div>

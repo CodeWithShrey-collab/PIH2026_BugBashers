@@ -1,6 +1,20 @@
 {% extends "base.html" %}
 
 {% block content %}
+
+<!-- ░░░ Full-page Neural Wastes map background ░░░ -->
+<div style="
+    position: fixed;
+    inset: 0;
+    background-image: url('{{ url_for('static', filename='Assets/Backgrounds/Kingdom_Map.png') }}');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    opacity: 0.22;
+    z-index: -1;
+    pointer-events: none;
+"></div>
+
 <div class="row mb-5">
     <div class="col-md-8">
         <h1 class="text-warning fw-bold text-uppercase mb-2"
@@ -92,19 +106,21 @@
     {% set darkness = (boss.corruption_percent / 100) * 0.8 %}
 
     <div class="col-12">
-        <div class="card bg-black border-secondary overflow-hidden position-relative shadow-lg">
+        <div class="card bg-black border-secondary position-relative shadow-lg overflow-hidden">
             <!-- Dungeon Background -->
             <div class="position-absolute w-100 h-100" style="
-                    background-image: url('{{ url_for('static', filename='Assets/Backgrounds/' + bg_image) }}'); 
-                    background-size: cover; 
-                    background-position: center; 
+                    background-image: url('{{ url_for('static', filename='Assets/Backgrounds/' + bg_image) }}');
+                    background-size: cover;
+                    background-position: center;
                     opacity: 0.3;
                     z-index: 0;
+                    border-radius: inherit;
+                    overflow: hidden;
                 "></div>
 
             <!-- Corruption Overlay -->
             <div class="position-absolute w-100 h-100"
-                style="background-color: rgba(0,0,0,{{ darkness }}); z-index: 1;"></div>
+                style="background-color: rgba(0,0,0,{{ darkness }}); z-index: 1; border-radius: inherit;"></div>
 
             {% set sprite_folder_map = {
             'Scroll Serpent': ('Serpent_Boss_1', 'Serpent_Boss.png'),
@@ -142,17 +158,17 @@
 
             <!-- Side Scrolling Gauntlet -->
             <div class="card-body position-relative z-3 p-4">
-                <div class="d-flex justify-content-between align-items-center overflow-auto pb-2 px-2"
-                    style="scrollbar-width: thin; scrollbar-color: #dc3545 #000;">
+                <div class="d-flex justify-content-between flex-nowrap align-items-center w-100 overflow-auto pb-4 px-2"
+                    style="scrollbar-width: thin; scrollbar-color: #dc3545 #000; padding-top: 22px; max-width: 100%; overflow-x: auto; overflow-y: hidden;">
 
                     {% for i in range(1, 7) %}
                     {% if i < 6 %} {% set node_sprite='BodyGuard' ~ i ~ '.png' %} {% set node_name='Bodyguard ' ~ i %}
                         {% else %} {% set node_sprite=boss_sprite_name %} {% set node_name='THE BOSS' %} {% endif %} {%
                         set node_path='Assets/' ~ sprite_folder ~ '/' ~ node_sprite %} {% set
-                        node_margin='margin-top: -15px;' if i==boss.current_bodyguard_index else '' %} <!-- Gauntlet
-                        Node -->
+                        node_margin='transform: translateY(-15px);' if i==boss.current_bodyguard_index else '' %} <!--
+                        Gauntlet Node -->
                         <div class="text-center d-flex flex-column align-items-center"
-                            style="min-width: 140px; position: relative; {{ node_margin }}">
+                            style="flex: 0 0 140px; position: relative; {{ node_margin }}">
 
                             {% if i < boss.current_bodyguard_index %} <!-- Defeated Node -->
                                 <div class="position-relative mb-2">
@@ -200,7 +216,7 @@
                             line_bg='linear-gradient(90deg, #dc3545, #dc3545)' %} {% elif
                             i==boss.current_bodyguard_index %} {% set line_bg='linear-gradient(90deg, #ffc107, #6c757d)'
                             %} {% else %} {% set line_bg='#343a40' %} {% endif %} <div class="flex-grow-1"
-                            style="height: 4px; background: {{ line_bg }}; min-width: 30px; margin-top: -30px; box-shadow: 0 0 5px rgba(0,0,0,0.5);">
+                            style="height: 4px; flex: 1 0 40px; background: {{ line_bg }}; margin-top: -30px; box-shadow: 0 0 5px rgba(0,0,0,0.5);">
                 </div>
                 {% endif %}
 

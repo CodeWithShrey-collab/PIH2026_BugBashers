@@ -9,8 +9,8 @@ from dotenv import load_dotenv
 load_dotenv()  # read .env into os.environ
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'dev_hackathon_key'  # Required for sessions
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///dopamine_detox.db'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_dev_key_change_in_production')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///dopamine_detox.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
@@ -28,8 +28,8 @@ def check_survey():
         if request.endpoint and request.endpoint not in ['onboarding', 'logout', 'static'] and not current_user.survey_completed:
             if not request.path.startswith('/api/'):
                 return redirect(url_for('onboarding'))
-from analytics import get_behavioral_patterns, get_daily_trends
-from intelligence import get_intelligence_data
+from services.analytics import get_behavioral_patterns, get_daily_trends
+from services.intelligence import get_intelligence_data
 
 def require_api_token(f):
     @wraps(f)
@@ -119,6 +119,8 @@ def api_config():
     can discover where to send data without any hardcoding."""
     load_dotenv(override=True)  # always re-read .env so URL changes take effect immediately
     api_base = os.environ.get('API_BASE_URL', request.host_url.rstrip('/')).rstrip('/')
+    if 'ngrok' in api_base or 'vercel.app' in api_base:
+        api_base = api_base.replace('http://', 'https://')
     resp = jsonify({"api_base_url": api_base})
     resp.headers['Access-Control-Allow-Origin'] = '*'
     return resp
@@ -536,7 +538,21 @@ def rpg_combat(boss_id):
     process_player_regen(current_user, now)
     process_regen(boss, now)
     db.session.commit()
-    return render_template('combat.html', user=current_user, boss=boss)
+    
+    recovery_seconds_left = 0
+    if current_user.current_health < current_user.max_health:
+        import math
+        regen_amount = current_user.max_health * (current_user.regen_rate / 100)
+        if regen_amount > 0:
+            missing_hp = current_user.max_health - current_user.current_health
+            ticks_needed = math.ceil(missing_hp / regen_amount)
+            total_seconds = ticks_needed * 120
+            # If last_health_update is None for some reason, default to now
+            last_update = current_user.last_health_update or now
+            elapsed = (now - last_update).total_seconds()
+            recovery_seconds_left = max(0, int(total_seconds - elapsed))
+            
+    return render_template('combat.html', user=current_user, boss=boss, recovery_seconds_left=recovery_seconds_left)
 
 @app.route('/shop', methods=['GET', 'POST'])
 @login_required
@@ -581,7 +597,7 @@ def get_stats():
     patterns = get_behavioral_patterns(current_user.id)
     return jsonify(patterns)
 
-from analytics import generate_pseudo_ai_insights
+from services.analytics import generate_pseudo_ai_insights
 
 @app.route('/profile')
 @login_required

@@ -1,8 +1,12 @@
 import math
+import random
 from datetime import datetime, timedelta
 from collections import defaultdict
+
+from flask import current_app
+
 from models import db, AppUsage
-from analytics import calculate_dopamine_score
+from services.analytics import calculate_dopamine_score
 
 def get_intelligence_data(user_id):
     now = datetime.now()
