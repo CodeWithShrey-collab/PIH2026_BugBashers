@@ -10,7 +10,11 @@ load_dotenv()  # read .env into os.environ
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_dev_key_change_in_production')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///dopamine_detox.db')
+# Supabase (and Heroku) return 'postgres://' but SQLAlchemy 1.4+ requires 'postgresql://'
+_db_url = os.environ.get('DATABASE_URL', 'sqlite:///dopamine_detox.db')
+if _db_url.startswith('postgres://'):
+    _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = _db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 
@@ -102,7 +106,7 @@ async function getApiBase() {{
             headers: {{ "ngrok-skip-browser-warning": "true" }}
         }});
         const data = await res.json();
-        const resolved = (data.api_base_url || BOOTSTRAP_ORIGIN).replace(/\/$/,"");
+        const resolved = (data.api_base_url || BOOTSTRAP_ORIGIN).replace(/\\/$/, "");
         await chrome.storage.local.set({{ apiBase: resolved }});
         return resolved;
     }} catch {{
@@ -783,30 +787,30 @@ async function getApiBase() {{
     )
 
 
+# ---------------------------------------------------------------------------
+# DB initialisation — runs on every Vercel cold-start (and locally).
+# Must live at module level so Vercel picks it up when it imports this file.
+# ---------------------------------------------------------------------------
+with app.app_context():
+    db.create_all()
+
+    # Seed armory if empty
+    if not Equipment.query.first():
+        items = [
+            Equipment(name='Rusty Spoon of Discipline', type='Weapon', effect_type='attack', effect_value=5, cost=30),
+            Equipment(name='Sword of Focus', type='Weapon', effect_type='attack', effect_value=15, cost=100),
+            Equipment(name='Aegis of Willpower', type='Armor', effect_type='defense', effect_value=10, cost=85),
+            Equipment(name='Cloak of Serenity', type='Armor', effect_type='defense', effect_value=25, cost=180),
+            Equipment(name='Frozen Hourglass', type='Artifact', effect_type='regen_freeze', effect_value=1, cost=500),
+            Equipment(name='Scroll of Wisdom', type='Artifact', effect_type='xp_boost', effect_value=1.5, cost=300)
+        ]
+        for item in items:
+            db.session.add(item)
+        db.session.commit()
+        print("Armory has been automatically seeded.")
+
+# ---------------------------------------------------------------------------
+# Local development entry-point only.  Vercel never calls __main__.
+# ---------------------------------------------------------------------------
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        # Create a default user if none exists
-        if not User.query.first():
-            default_user = User(username="default_user")
-            default_user.set_password("password") # Provide a default password
-            db.session.add(default_user)
-            db.session.commit()
-            print("Default user created.")
-            
-        # Seed armory if empty
-        if not Equipment.query.first():
-            items = [
-                Equipment(name='Rusty Spoon of Discipline', type='Weapon', effect_type='attack', effect_value=5, cost=30),
-                Equipment(name='Sword of Focus', type='Weapon', effect_type='attack', effect_value=15, cost=100),
-                Equipment(name='Aegis of Willpower', type='Armor', effect_type='defense', effect_value=10, cost=85),
-                Equipment(name='Cloak of Serenity', type='Armor', effect_type='defense', effect_value=25, cost=180),
-                Equipment(name='Frozen Hourglass', type='Artifact', effect_type='regen_freeze', effect_value=1, cost=500),
-                Equipment(name='Scroll of Wisdom', type='Artifact', effect_type='xp_boost', effect_value=1.5, cost=300)
-            ]
-            for item in items:
-                db.session.add(item)
-            db.session.commit()
-            print("Armory has been automatically seeded.")
-    
     app.run(debug=True, port=8080)
