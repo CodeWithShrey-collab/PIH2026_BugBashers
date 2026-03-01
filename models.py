@@ -12,6 +12,12 @@ friendships = db.Table('friendships',
     db.Column('friend_id', db.Integer, db.ForeignKey('user.id'))
 )
 
+# Association table for Equipment
+owned_equipment = db.Table('owned_equipment',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
+    db.Column('equipment_id', db.Integer, db.ForeignKey('equipment.id'))
+)
+
 class Guild(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
@@ -23,28 +29,85 @@ class Guild(db.Model):
     members = db.relationship('User', foreign_keys='User.guild_id', backref='guild', lazy=True)
     leader = db.relationship('User', foreign_keys=[leader_id], backref='led_guilds', lazy=True)
 
+class Equipment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    type = db.Column(db.String(50), nullable=False) # Weapon, Armor, Potion, Artifact
+    effect_type = db.Column(db.String(50), nullable=False) # attack, defense, regen_freeze, xp_boost
+    effect_value = db.Column(db.Float, nullable=False)
+    cost = db.Column(db.Integer, nullable=False)
+
+class Boss(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    boss_type = db.Column(db.String(50), nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    base_hp = db.Column(db.Float, nullable=False)
+    current_hp = db.Column(db.Float, nullable=False)
+    regen_rate = db.Column(db.Float, default=5.0)
+    corruption_percent = db.Column(db.Float, default=20.0)
+    relapse_count = db.Column(db.Integer, default=0)
+    victory_count = db.Column(db.Integer, default=0)
+    weakness_multiplier = db.Column(db.Float, default=1.0)
+    last_updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Phase 5: Shadow Fight 2 Bodyguard System
+    current_bodyguard_index = db.Column(db.Integer, default=1) # 1-5 Bodyguards, 6=Boss
+
+    # Relationships
+    user = db.relationship('User', backref=db.backref('bosses', lazy=True))
+
+class DailyTask(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    description = db.Column(db.String(255), nullable=False)
+    is_completed = db.Column(db.Boolean, default=False)
+    assigned_date = db.Column(db.Date, nullable=False)
+    coin_reward = db.Column(db.Integer, default=30)
+    
+    # Relationship
+    user = db.relationship('User', backref=db.backref('daily_tasks', lazy=True))
+
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     
-    # NEW: 6-digit hex code
+    # Existing features
     hex_code = db.Column(db.String(6), unique=True, nullable=False)
-    
-    # NEW: Guild ID
     guild_id = db.Column(db.Integer, db.ForeignKey('guild.id'), nullable=True)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Points/Gamification
+    # RPG / Gamification Stats
     total_points = db.Column(db.Integer, default=0)
     current_streak = db.Column(db.Integer, default=0)
+    
+    level = db.Column(db.Integer, default=1)
+    xp = db.Column(db.Integer, default=0)
+    coins = db.Column(db.Integer, default=0)
+    current_health = db.Column(db.Float, default=100.0)
+    max_health = db.Column(db.Float, default=100.0)
+    regen_rate = db.Column(db.Float, default=1.0)
+    last_health_update = db.Column(db.DateTime, default=datetime.utcnow)
+    attack_stat = db.Column(db.Integer, default=10)
+    defense_stat = db.Column(db.Integer, default=5)
+    
+    # Survey & Progression
+    survey_completed = db.Column(db.Boolean, default=False)
+    peak_time = db.Column(db.String(50))
+    last_coin_gain_date = db.Column(db.Date)
+    daily_coins_earned = db.Column(db.Integer, default=0)
+    lich_spawned = db.Column(db.Boolean, default=False)
 
-    # NEW: Friendships relationship
+    # Relationships
     friends = db.relationship('User', secondary=friendships,
                               primaryjoin=(friendships.c.user_id == id),
                               secondaryjoin=(friendships.c.friend_id == id),
                               backref=db.backref('friend_of', lazy='dynamic'), lazy='dynamic')
+                              
+    equipment = db.relationship('Equipment', secondary=owned_equipment, backref=db.backref('owners', lazy='dynamic'), lazy='dynamic')
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)

@@ -1,6 +1,6 @@
 from flask import Flask, render_template, jsonify, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from models import db, User, AppUsage
+from models import db, User, AppUsage, Boss, Equipment, DailyTask
 from itsdangerous import URLSafeTimedSerializer
 from functools import wraps
 from datetime import datetime
@@ -19,6 +19,13 @@ login_manager.init_app(app)
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+@app.before_request
+def check_survey():
+    if current_user.is_authenticated:
+        if request.endpoint and request.endpoint not in ['onboarding', 'logout', 'static'] and not current_user.survey_completed:
+            if not request.path.startswith('/api/'):
+                return redirect(url_for('onboarding'))
 from analytics import get_behavioral_patterns, get_daily_trends
 from intelligence import get_intelligence_data
 
@@ -200,6 +207,287 @@ def dashboard():
     patterns = get_behavioral_patterns(current_user.id)
     trends = get_daily_trends(current_user.id)
     return render_template('dashboard.html', patterns=patterns, trends=trends, user=current_user)
+
+@app.route('/onboarding', methods=['GET', 'POST'])
+@login_required
+def onboarding():
+    if current_user.survey_completed:
+        return redirect(url_for('rpg_map'))
+        
+    if request.method == 'POST':
+        # Psychological Mapping logic
+        bosses_to_spawn = set()
+        
+        # Q1: Under stress, what is your instinct?
+        q1 = request.form.get('q1')
+        if q1 == 'scroll': bosses_to_spawn.add('Scroll Serpent')
+        elif q1 == 'eat': bosses_to_spawn.add('Comfort Wraith')
+        elif q1 == 'game': bosses_to_spawn.add('Time Thief Warlord')
+        elif q1 == 'nsfw': bosses_to_spawn.add('Crimson Temptress')
+        
+        # Q2: When you have a massive deadline, how do you handle it?
+        q2 = request.form.get('q2')
+        if q2 == 'delay': bosses_to_spawn.add('Procrastination Lich')
+        elif q2 == 'binge': bosses_to_spawn.add('Void Monarch')
+        
+        # Q3: How often do you check your phone in a social setting?
+        q3 = request.form.get('q3')
+        if q3 in ['often', 'always']: bosses_to_spawn.add('Validation Phantom')
+        
+        if not bosses_to_spawn:
+            # Fallback if they answer purely positive/neutral
+            bosses_to_spawn.add('Scroll Serpent')
+
+        # Auto-infer peak time from analytics
+        patterns = get_behavioral_patterns(current_user.id)
+        current_user.peak_time = patterns.get('peak_window', 'Evening')
+        
+        for habit in bosses_to_spawn:
+            # Base HP is purely narrative now, no longer tied to survey math
+            new_boss = Boss(
+                user_id=current_user.id,
+                boss_type=habit,
+                is_active=True,
+                base_hp=100.0,
+                current_hp=100.0,
+                regen_rate=5.0,
+                corruption_percent=20.0,
+                last_updated_at=datetime.utcnow()
+            )
+            db.session.add(new_boss)
+            
+        current_user.survey_completed = True
+        db.session.commit()
+        return redirect(url_for('rpg_map'))
+        
+    return render_template('onboarding.html', user=current_user)
+
+import random
+def ensure_daily_tasks(user):
+    today = datetime.utcnow().date()
+    existing_tasks = DailyTask.query.filter_by(user_id=user.id, assigned_date=today).all()
+    
+    if len(existing_tasks) < 3:
+        # Generate 3 new tasks
+        DailyTask.query.filter_by(user_id=user.id).delete() # clear old ones
+        db.session.commit()
+        
+        active_bosses = [b.boss_type for b in user.bosses if b.is_active]
+        task_pool = [
+            "Leave your phone in another room for 2 hours.",
+            "Read 10 pages of a physical book.",
+            "Meditate or sit in silence for 10 minutes.",
+            "Complete 30 minutes of deep work with no tabs open.",
+            "Do 20 pushups or equivalent physical exercise."
+        ]
+        
+        if 'Scroll Serpent' in active_bosses: task_pool.append("Use grayscale mode on your phone for 4 hours.")
+        if 'Comfort Wraith' in active_bosses: task_pool.append("Drink 2 glasses of water instead of a sugary snack.")
+        if 'Procrastination Lich' in active_bosses: task_pool.append("Complete the hardest task on your to-do list BEFORE noon.")
+        if 'Crimson Temptress' in active_bosses: task_pool.append("Keep bedroom door open & devices outside for 24h.")
+        
+        selected_tasks = random.sample(task_pool, min(3, len(task_pool)))
+        for desc in selected_tasks:
+            new_task = DailyTask(user_id=user.id, description=desc, assigned_date=today, coin_reward=35)
+            db.session.add(new_task)
+            
+        db.session.commit()
+
+import math
+from datetime import timedelta
+
+def process_regen(boss, current_time):
+    if not boss.last_updated_at:
+        boss.last_updated_at = current_time
+        return
+        
+    time_elapsed = (current_time - boss.last_updated_at).total_seconds()
+    regen_ticks = math.floor(time_elapsed / 120)
+    
+    if regen_ticks > 0:
+        regen_amount = regen_ticks * (boss.base_hp * (boss.regen_rate / 100))
+        boss.current_hp = min(boss.base_hp, boss.current_hp + regen_amount)
+        boss.last_updated_at = boss.last_updated_at + timedelta(seconds=regen_ticks * 120)
+
+def process_player_regen(user, current_time):
+    if not user.last_health_update:
+        user.last_health_update = current_time
+        return
+        
+    time_elapsed = (current_time - user.last_health_update).total_seconds()
+    regen_ticks = math.floor(time_elapsed / 120)
+    
+    if regen_ticks > 0 and user.current_health < user.max_health:
+        regen_amount = regen_ticks * (user.max_health * (user.regen_rate / 100))
+        user.current_health = min(user.max_health, user.current_health + regen_amount)
+        user.last_health_update = user.last_health_update + timedelta(seconds=regen_ticks * 120)
+    elif user.current_health >= user.max_health:
+        user.last_health_update = current_time
+
+BODYGUARD_STATS = {
+    1: 28,   # e.g., Venom Hatchling
+    2: 70,   # e.g., Shadow Viper
+    3: 180,  # e.g., Scale Sentinel
+    4: 300,  # e.g., Twin-Fang Hydra Spawn
+    5: 530,  # e.g., Coil Reaver
+    6: 1200  # The Boss itself
+}
+
+@app.route('/map')
+@login_required
+def rpg_map():
+    now = datetime.utcnow()
+    # Always ensure the user has 3 active tasks for the day
+    ensure_daily_tasks(current_user)
+    
+    active_bosses = Boss.query.filter_by(user_id=current_user.id, is_active=True).all()
+    today_tasks = DailyTask.query.filter_by(user_id=current_user.id, assigned_date=now.date()).all()
+    
+    process_player_regen(current_user, now)
+    
+    for boss in active_bosses:
+        process_regen(boss, now)
+        
+    db.session.commit()
+    
+    # Check Lich conditions
+    non_lich_bosses = [b for b in active_bosses if b.boss_type != 'Procrastination Lich']
+    if len(non_lich_bosses) >= 1 and not current_user.lich_spawned:
+        all_met = all(b.corruption_percent < 10 and b.victory_count >= 3 for b in non_lich_bosses)
+        if all_met:
+            lich_hp = 100 + (sum(b.corruption_percent for b in active_bosses) * 2)
+            lich = Boss(
+                user_id=current_user.id,
+                boss_type='Procrastination Lich',
+                is_active=True,
+                base_hp=lich_hp,
+                current_hp=lich_hp,
+                regen_rate=5.0,
+                corruption_percent=20.0,
+                last_updated_at=now
+            )
+            db.session.add(lich)
+            current_user.lich_spawned = True
+            db.session.commit()
+            active_bosses.append(lich)
+            flash("The Procrastination Lich has awakened!")
+            
+    return render_template('map.html', user=current_user, bosses=active_bosses, tasks=today_tasks)
+
+@app.route('/claim_task/<int:task_id>', methods=['POST'])
+@login_required
+def claim_task(task_id):
+    task = DailyTask.query.get_or_404(task_id)
+    if task.user_id == current_user.id and not task.is_completed:
+        task.is_completed = True
+        current_user.coins += task.coin_reward
+        db.session.commit()
+        flash(f"Task completed! Earned {task.coin_reward} coins.")
+    return redirect(url_for('rpg_map'))
+
+@app.route('/combat/resolve/<int:boss_id>', methods=['POST'])
+@login_required
+def combat_resolve(boss_id):
+    boss = Boss.query.get_or_404(boss_id)
+    if boss.user_id != current_user.id:
+        return redirect(url_for('rpg_map'))
+        
+    # Phase 5: Stat-Check Logic (Shadow Fight 2 Style)
+    effective_attack = current_user.attack_stat
+    effective_defense = current_user.defense_stat
+    
+    for eq in current_user.equipment:
+        if eq.effect_type == 'attack': effective_attack += eq.effect_value
+        if eq.effect_type == 'defense': effective_defense += eq.effect_value
+            
+    player_power = effective_attack + effective_defense
+    enemy_power = BODYGUARD_STATS.get(boss.current_bodyguard_index, 9999)
+    
+    if player_power >= enemy_power:
+        # Victory against this bodyguard
+        if boss.current_bodyguard_index < 6:
+            boss.current_bodyguard_index += 1
+            flash(f"Bodyguard Defeated! You advance deeper into the dungeon.")
+        else:
+            # Defeated the true boss
+            boss.corruption_percent = 0
+            boss.victory_count += 1
+            boss.current_bodyguard_index = 1 # Reset the gauntlet
+            flash(f"Massive Victory! The {boss.boss_type} has been vanquished for now.")
+            
+        current_user.current_streak += 1
+        current_user.xp += 50
+    else:
+        # Defeat - Stats too low
+        current_user.current_health = 0.0
+        current_user.last_health_update = datetime.utcnow()
+        boss.corruption_percent = min(100, boss.corruption_percent + 2)
+        current_user.current_streak = 0
+        boss.relapse_count += 1
+        flash(f"DEFEAT! Your Power ({player_power}) was crushed by the Bodyguard ({enemy_power}). You lost all your HP and must rest to recover!")
+    
+    db.session.commit()
+    return redirect(url_for('rpg_combat', boss_id=boss.id))
+
+@app.route('/combat/relapse/<int:boss_id>', methods=['POST'])
+@login_required
+def combat_relapse(boss_id):
+    boss = Boss.query.get_or_404(boss_id)
+    if boss.user_id != current_user.id:
+        return redirect(url_for('rpg_map'))
+        
+    # Explicit Surrender / Relapse
+    boss.corruption_percent = min(100, boss.corruption_percent + 5)
+    boss.relapse_count += 1
+    current_user.current_streak = 0
+    
+    # Optional logic: Falling back a bodyguard level if you succumb to the habit?
+    if boss.current_bodyguard_index > 1:
+        boss.current_bodyguard_index -= 1
+        flash("You succumbed to the urge. The corruption forces you back a dungeon level.")
+    else:
+        flash(f"You succumbed to the urge. Corruption increased to {boss.corruption_percent}%.")
+        
+    boss.last_updated_at = datetime.utcnow()
+    db.session.commit()
+    return redirect(url_for('rpg_combat', boss_id=boss.id))
+
+@app.route('/combat/<int:boss_id>')
+@login_required
+def rpg_combat(boss_id):
+    boss = Boss.query.get_or_404(boss_id)
+    if boss.user_id != current_user.id:
+        return redirect(url_for('rpg_map'))
+    
+    # Process regen visually
+    now = datetime.utcnow()
+    process_player_regen(current_user, now)
+    process_regen(boss, now)
+    db.session.commit()
+    return render_template('combat.html', user=current_user, boss=boss)
+
+@app.route('/shop', methods=['GET', 'POST'])
+@login_required
+def shop():
+    available_equipment = Equipment.query.all()
+    
+    if request.method == 'POST':
+        equipment_id = request.form.get('equipment_id', type=int)
+        if equipment_id:
+            item = Equipment.query.get(equipment_id)
+            if item:
+                if item in current_user.equipment:
+                    flash(f"You already own {item.name}.")
+                elif current_user.coins >= item.cost:
+                    current_user.coins -= item.cost
+                    current_user.equipment.append(item)
+                    db.session.commit()
+                    flash(f"Successfully purchased {item.name}!")
+                else:
+                    flash("Not enough coins.")
+        return redirect(url_for('shop'))
+        
+    return render_template('shop.html', user=current_user, equipment=available_equipment)
 
 @app.route('/behavioral-intelligence')
 @login_required

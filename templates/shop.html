@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-5">
+    <div class="col-md-8">
+        <h1 class="text-warning fw-bold text-uppercase mb-2"
+            style="letter-spacing: 0.1em; text-shadow: 0 0 10px rgba(255,193,7,0.5);">The Armory</h1>
+        <p class="text-secondary font-monospace">Exchange your hard-earned Coins for permanent defensive and offensive
+            capabilities.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <div class="d-inline-block bg-dark border border-warning rounded p-3 text-center">
+            <span class="d-block text-secondary small font-monospace text-uppercase">Treasury</span>
+            <div class="mt-2">
+                <span class="text-white fw-bold fs-3"><i class="bi bi-coin text-warning me-2"></i>{{ user.coins
+                    }}</span>
+            </div>
+            <small class="text-muted font-monospace mt-2 d-block">Cap: {{ user.daily_coins_earned }} / 100 Today</small>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% if equipment %}
+    {% for item in equipment %}
+    <div class="col-md-6 col-lg-3">
+        <div class="card bg-black border-secondary h-100 position-relative">
+            {% if item in user.equipment %}
+            <div
+                class="position-absolute w-100 h-100 bg-black opacity-75 z-2 d-flex align-items-center justify-content-center">
+                <h3 class="text-success fw-bold font-monospace"
+                    style="transform: rotate(-15deg); border: 3px solid #198754; padding: 10px;">OWNED</h3>
+            </div>
+            {% endif %}
+
+            <div class="card-body text-center z-1 pt-4">
+                {% if item.type == 'Weapon' %}
+                <i class="bi bi-heptagon-half text-danger mb-3 d-block" style="font-size: 3rem;"></i>
+                {% elif item.type == 'Armor' %}
+                <i class="bi bi-shield-shaded text-info mb-3 d-block" style="font-size: 3rem;"></i>
+                {% else %}
+                <i class="bi bi-gem text-primary mb-3 d-block" style="font-size: 3rem;"></i>
+                {% endif %}
+
+                <h5 class="text-white font-monospace text-uppercase">{{ item.name }}</h5>
+                <p class="text-muted small mb-4">{{ item.type }}</p>
+
+                <div class="bg-dark p-2 rounded mb-4 border border-secondary">
+                    {% if item.effect_type == 'attack' %}
+                    <span class="d-block text-danger fw-bold">+{{ item.effect_value | int }} ATK</span>
+                    {% elif item.effect_type == 'defense' %}
+                    <span class="d-block text-info fw-bold">+{{ item.effect_value | int }} DEF</span>
+                    {% else %}
+                    <span class="d-block text-primary fw-bold">{{ item.effect_type | upper }}</span>
+                    {% endif %}
+                </div>
+
+                <form method="POST" action="{{ url_for('shop') }}">
+                    <input type="hidden" name="equipment_id" value="{{ item.id }}">
+                    <button type="submit" class="btn btn-outline-warning w-100 fw-bold font-monospace">
+                        Buy - {{ item.cost }} <i class="bi bi-coin"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="col-12 text-center text-muted py-5">
+        <h4 class="font-monospace">The armory is currently empty.</h4>
+        <p>Admin: Equipment needs to be seeded into the database.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

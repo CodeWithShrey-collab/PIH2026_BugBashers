@@ -38,9 +38,17 @@
             </a>
             <a href="{{ url_for('guild_dashboard') }}"
                 style="margin-left: 1rem; color: #ef4444; text-decoration: none; font-weight: 600;">
-                ⚔️ Syndicate
+                🎌 Syndicate
             </a>
-            <div class="points-badge" style="margin-left: 1rem;">{{ current_user.total_points }} pts</div>
+            <a href="{{ url_for('rpg_map') }}"
+                style="margin-left: 1rem; color: #a855f7; text-decoration: none; font-weight: 600;">
+                🗺️ The Wastes
+            </a>
+            <a href="{{ url_for('shop') }}"
+                style="margin-left: 1rem; color: #facc15; text-decoration: none; font-weight: 600;">
+                🛒 Armory
+            </a>
+            <div class="points-badge" style="margin-left: 1rem;">{{ current_user.coins }} COINS</div>
             <a href="{{ url_for('logout') }}" class="auth-text-link"
                 style="margin-left: 1rem; color: var(--text-secondary); text-decoration: none; font-size: 0.875rem;">Logout</a>
             {% else %}
