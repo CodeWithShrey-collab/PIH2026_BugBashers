@@ -159,15 +159,16 @@
 
                     <div class="row g-3">
                         <div class="col-md-6">
-                            {% set p_attack = user.attack_stat %}
-                            {% set p_defense = user.defense_stat %}
+                            {% set stats = namespace(attack=user.attack_stat, defense=user.defense_stat) %}
                             {% for eq in user.equipment %}
-                            {% if eq.effect_type == 'attack' %}{% set p_attack = p_attack + eq.effect_value %}{% endif
-                            %}
-                            {% if eq.effect_type == 'defense' %}{% set p_defense = p_defense + eq.effect_value %}{%
-                            endif %}
+                            {% if eq.effect_type == 'attack' %}
+                            {% set stats.attack = stats.attack + eq.effect_value %}
+                            {% endif %}
+                            {% if eq.effect_type == 'defense' %}
+                            {% set stats.defense = stats.defense + eq.effect_value %}
+                            {% endif %}
                             {% endfor %}
-                            {% set player_power = p_attack + p_defense %}
+                            {% set player_power = stats.attack + stats.defense %}
 
                             <form method="POST" action="{{ url_for('combat_resolve', boss_id=boss.id) }}">
                                 {% if user.current_health <= 0.0 %} <button type="button"
@@ -182,12 +183,15 @@
                                         class="btn btn-outline-info w-100 py-3 fw-bold font-monospace btn-hover-glow text-uppercase">
                                         <i class="bi bi-sword d-block mb-2 fs-3 text-info"></i>
                                         Engage Target<br>
-                                        {% if player_power >= enemy_power %}
-                                        <small class="text-success mt-1 d-block">Difficulty: Achievable</small>
-                                        {% else %}
-                                        <small class="text-danger mt-1 d-block">Difficulty: IMPOSSIBLE (Need {{
-                                            enemy_power }})</small>
-                                        {% endif %}
+                                        <div class="mt-1 d-block small">
+                                            <span class="text-white">Your Power: <strong>{{ player_power | int
+                                                    }}</strong></span> |
+                                            {% if player_power >= enemy_power %}
+                                            <span class="text-success">Achievable</span>
+                                            {% else %}
+                                            <span class="text-danger">IMPOSSIBLE (Need {{ enemy_power | int }})</span>
+                                            {% endif %}
+                                        </div>
                                     </button>
                                     {% if player_power < enemy_power %} <small
                                         class="text-danger d-block mt-2 font-monospace fw-bold">Warning: Defeat drains
