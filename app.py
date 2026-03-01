@@ -5,13 +5,14 @@ from itsdangerous import URLSafeTimedSerializer
 from functools import wraps
 from datetime import datetime
 import os, io, zipfile
+import pg8000  # noqa: F401 – explicit import forces Vercel to bundle pg8000
 from dotenv import load_dotenv
 load_dotenv()  # read .env into os.environ
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_dev_key_change_in_production')
 # Use pg8000 (pure-Python driver, no native libs) for PostgreSQL on Vercel.
-# Supabase/Heroku may return postgres:// which we normalise to postgresql+pg8000://
+# Normalise any postgres:// or postgresql:// to postgresql+pg8000://
 _db_url = os.environ.get('DATABASE_URL', 'sqlite:///dopamine_detox.db')
 if _db_url.startswith('postgres://'):
     _db_url = _db_url.replace('postgres://', 'postgresql+pg8000://', 1)
@@ -19,6 +20,9 @@ elif _db_url.startswith('postgresql://'):
     _db_url = _db_url.replace('postgresql://', 'postgresql+pg8000://', 1)
 app.config['SQLALCHEMY_DATABASE_URI'] = _db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# Force pg8000 driver explicitly so SQLAlchemy never falls back to psycopg2
+if not _db_url.startswith('sqlite'):
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'connect_args': {}}
 db.init_app(app)
 
 login_manager = LoginManager()
